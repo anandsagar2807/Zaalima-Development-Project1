@@ -1,0 +1,47 @@
+{
+  "name": "credit-decision-engine-backend",
+  "version": "1.0.0",
+  "description": "AI-powered Credit Decision Engine Backend",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.8.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.4",
+    "multer": "^1.4.5-lts.1",
+    "aws-sdk": "^2.1515.0",
+    "axios": "^1.6.5",
+    "cheerio": "^1.0.0-rc.12",
+    "puppeteer": "^21.7.0",
+    "natural": "^6.10.4",
+    "compromise": "^14.10.1",
+    "sentiment": "^5.0.2",
+    "pdf-parse": "^1.1.1",
+    "xlsx": "^0.18.5",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "joi": "^17.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "prisma": "^5.8.0",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
