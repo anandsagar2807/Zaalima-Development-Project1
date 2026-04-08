@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 38% 98%;
+    --foreground: 222 47% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 12%;
+    --primary: 213 74% 34%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 30% 94%;
+    --secondary-foreground: 222 47% 14%;
+    --muted: 210 26% 95%;
+    --muted-foreground: 217 16% 40%;
+    --accent: 42 65% 90%;
+    --accent-foreground: 222 47% 14%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 214 22% 86%;
+    --input: 214 22% 86%;
+    --ring: 42 70% 52%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222 45% 9%;
+    --foreground: 210 40% 96%;
+    --card: 222 41% 12%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 41% 12%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 210 85% 67%;
+    --primary-foreground: 222 47% 12%;
+    --secondary: 217 25% 19%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 25% 19%;
+    --muted-foreground: 214 20% 72%;
+    --accent: 42 60% 24%;
+    --accent-foreground: 40 100% 90%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 24% 22%;
+    --input: 217 24% 22%;
+    --ring: 42 74% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-blue-500 to-amber-400 bg-clip-text text-transparent;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
