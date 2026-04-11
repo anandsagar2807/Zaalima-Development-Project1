@@ -1,11 +1,11 @@
 # GitGuard AI – Week 1 Report
 
-## 📌 Project Overview
+## Project Overview
 GitGuard AI is an AI-powered code review platform that analyzes pull requests, identifies bugs, security issues, and performance problems, and suggests fixes automatically.
 
 ---
 
-## ✅ Work Completed
+## Work Completed
 - Formation of team and discussion of project approach  
 - Creation of a common GitHub repository for collaboration  
 - Initial frontend UI development for the platform  
@@ -15,15 +15,15 @@ GitGuard AI is an AI-powered code review platform that analyzes pull requests, i
 
 ---
 
-## 👥 Team Contributions
-- **Anand**: Developed frontend UI and handled authentication setup  
-- **Stephen**: Coordinated tasks, reviewed progress, and guided implementation  
-- **Sudharshan**: Assigned backend development  
-- **Tanishka**: Documentation of progress and understanding project flow  
+## Team Contributions
+- Anand: Developed frontend UI and handled authentication setup  
+- Stephen: Coordinated tasks, reviewed progress, and guided implementation  
+- Sudharshan: Assigned backend development  
+- Tanishka: Documentation of progress and understanding project flow  
 
 ---
 
-## 🚀 Next Steps (Week 2 Plan)
+## Next Steps (Week 2 Plan)
 - Begin backend development and API creation  
 - Improve and refine frontend UI  
 - Integrate frontend with backend  
