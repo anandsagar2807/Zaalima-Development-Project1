@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { GitBranch, Play, Pause, Shield, Wand2, Search, Power, RefreshCw, FlaskConical, AlertTriangle } from "lucide-react"
+import { GitBranch, Play, Pause, Shield, Wand2, Search, Power, RefreshCw, FlaskConical, AlertTriangle, FileCode } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDashboardStore } from "@/store/dashboardStore"
 import { toast } from "sonner"
@@ -28,6 +28,7 @@ export default function RepositoriesPage() {
         toggleRepositoryStatus,
         toggleStrictMode,
         toggleSecurityScan,
+        toggleIgnoreStyling,
         toggleAutoFix,
         enableAllBots,
         setRepoSearchQuery,
@@ -79,6 +80,14 @@ export default function RepositoriesPage() {
         }
     }
 
+    const handleToggleIgnoreStyling = async (id: string) => {
+        const repo = repositories.find((r) => r.id === id)
+        if (repo) {
+            await toggleIgnoreStyling(id)
+            toast.success(`Ignore styling ${!repo.ignoreLint ? "enabled" : "disabled"} for ${repo.name}`)
+        }
+    }
+
     const handleToggleAutoFix = async (id: string) => {
         const repo = repositories.find((r) => r.id === id)
         if (repo) {
@@ -105,6 +114,7 @@ export default function RepositoriesPage() {
         active: repositories.filter((r) => r.status === "active").length,
         paused: repositories.filter((r) => r.status === "paused").length,
         withSecurity: repositories.filter((r) => r.securityScan).length,
+        withIgnoreStyling: repositories.filter((r) => r.ignoreLint).length,
     }
 
     return (
@@ -193,6 +203,19 @@ export default function RepositoriesPage() {
                                     <p className="text-2xl font-bold text-blue-500">{stats.withSecurity}</p>
                                 </div>
                                 <Shield className="h-6 w-6 text-blue-500/50" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                    <Card className="bg-sky-500/5 border-sky-500/20">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Ignore Styling</p>
+                                    <p className="text-2xl font-bold text-sky-500">{stats.withIgnoreStyling}</p>
+                                </div>
+                                <AlertTriangle className="h-6 w-6 text-sky-500/50" />
                             </div>
                         </CardContent>
                     </Card>
@@ -337,6 +360,17 @@ export default function RepositoriesPage() {
                                         >
                                             <Shield className="h-4 w-4" />
                                             <span>Security</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleToggleIgnoreStyling(repo.id)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${repo.ignoreLint
+                                                ? "bg-sky-500/10 text-sky-500"
+                                                : "bg-muted text-muted-foreground"
+                                                }`}
+                                        >
+                                            <FileCode className="h-4 w-4" />
+                                            <span>Ignore Styling</span>
                                         </button>
 
                                         <button
