@@ -57,6 +57,7 @@ interface DashboardState {
     toggleRepositoryStatus: (id: string) => Promise<void>
     toggleStrictMode: (id: string) => Promise<void>
     toggleSecurityScan: (id: string) => Promise<void>
+    toggleIgnoreStyling: (id: string) => Promise<void>
     toggleAutoFix: (id: string) => Promise<void>
     enableAllBots: () => Promise<void>
     setRepoSearchQuery: (query: string) => void
@@ -238,6 +239,27 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                     ),
                 })),
                 set({ error: "Failed to toggle security scan" })
+            }
+        }
+    },
+
+    toggleIgnoreStyling: async (id: string) => {
+        const repo = get().repositories.find((r) => r.id === id)
+        if (repo) {
+            set((state) => ({
+                repositories: state.repositories.map((r) =>
+                    r.id === id ? { ...r, ignoreLint: !r.ignoreLint } : r
+                ),
+            }))
+            try {
+                await api.toggleIgnoreStyling(id)
+            } catch (error) {
+                set((state) => ({
+                    repositories: state.repositories.map((r) =>
+                        r.id === id ? { ...r, ignoreLint: !r.ignoreLint } : r
+                    ),
+                }))
+                set({ error: "Failed to toggle ignore styling" })
             }
         }
     },

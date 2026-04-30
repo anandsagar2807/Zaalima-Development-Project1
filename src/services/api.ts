@@ -26,6 +26,23 @@ import {
 // Simulate network delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> {
+    try {
+        const response = await fetch(url, {
+            cache: "no-store",
+            ...init,
+        })
+
+        if (!response.ok) {
+            return null
+        }
+
+        return (await response.json()) as T
+    } catch {
+        return null
+    }
+}
+
 // In-memory state for optimistic updates
 let repositories = [...mockRepositories]
 let pullRequests = [...mockPullRequests]
@@ -122,6 +139,14 @@ export async function toggleSecurityScan(id: string): Promise<Repository> {
     return { ...repo }
 }
 
+export async function toggleIgnoreStyling(id: string): Promise<Repository> {
+    await delay(200)
+    const repo = repositories.find((r) => r.id === id)
+    if (!repo) throw new Error("Repository not found")
+    repo.ignoreLint = !repo.ignoreLint
+    return { ...repo }
+}
+
 export async function toggleAutoFix(id: string): Promise<Repository> {
     await delay(200)
     const repo = repositories.find((r) => r.id === id)
@@ -192,6 +217,12 @@ export async function sortPullRequests(
 // ============ AI Reviews API ============
 export async function getAIReviews(prId?: string): Promise<AIReview[]> {
     await delay(500)
+
+    const backend = await fetchJson<{ reviews: AIReview[] }>("/api/reviews/history")
+    if (backend?.reviews) {
+        return prId ? backend.reviews.filter((review) => review.prId === prId) : backend.reviews
+    }
+
     if (prId) {
         return aiReviews.filter((r) => r.prId === prId)
     }
@@ -311,17 +342,52 @@ export async function refreshWebhookLogs(): Promise<WebhookLog[]> {
 // ============ Settings API ============
 export async function getSettings(): Promise<AppSettings> {
     await delay(300)
+
+    const backend = await fetchJson<{ settings: AppSettings }>("/api/settings")
+    if (backend?.settings) {
+        appSettings = { ...appSettings, ...backend.settings }
+        return { ...appSettings }
+    }
+
     return { ...appSettings }
 }
 
 export async function updateSettings(newSettings: Partial<AppSettings>): Promise<AppSettings> {
     await delay(400)
+
+    const backend = await fetchJson<{ settings: AppSettings }>("/api/settings", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newSettings),
+    })
+
+    if (backend?.settings) {
+        appSettings = { ...appSettings, ...backend.settings }
+        return { ...appSettings }
+    }
+
     appSettings = { ...appSettings, ...newSettings }
     return { ...appSettings }
 }
 
 export async function resetSettings(): Promise<AppSettings> {
     await delay(300)
+
+    const backend = await fetchJson<{ settings: AppSettings }>("/api/settings", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(defaultSettings),
+    })
+
+    if (backend?.settings) {
+        appSettings = { ...backend.settings }
+        return { ...appSettings }
+    }
+
     appSettings = { ...defaultSettings }
     return { ...appSettings }
 }
