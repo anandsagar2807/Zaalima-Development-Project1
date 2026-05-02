@@ -1,4 +1,6 @@
-// Mock API Service for GitGuard AI Dashboard
+// API Service for GitGuard AI Dashboard
+// Tries real backend endpoints first, falls back to mock data when unavailable.
+
 import {
     mockRepositories,
     mockPullRequests,
@@ -23,8 +25,7 @@ import {
     type Analytics,
 } from "./mockData"
 
-// Simulate network delay
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> {
     try {
@@ -33,9 +34,7 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> 
             ...init,
         })
 
-        if (!response.ok) {
-            return null
-        }
+        if (!response.ok) return null
 
         return (await response.json()) as T
     } catch {
@@ -43,7 +42,7 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> 
     }
 }
 
-// In-memory state for optimistic updates
+// In-memory state for optimistic updates (used as fallback when backend is unavailable)
 let repositories = [...mockRepositories]
 let pullRequests = [...mockPullRequests]
 let aiReviews = [...mockAIReviews]
@@ -77,36 +76,52 @@ const generateNewWebhook = (): WebhookLog => {
 }
 
 // ============ Analytics API ============
+
 export async function getAnalytics(): Promise<Analytics> {
-    await delay(500)
+    // Try the real analytics endpoint
+    const data = await fetchJson<{ analytics: Analytics | null }>("/api/analytics")
+    if (data?.analytics) {
+        return data.analytics
+    }
     return { ...mockAnalytics }
 }
 
 export async function getPRsPerDayData(): Promise<typeof prsPerDayData> {
-    await delay(300)
+    const data = await fetchJson<{ prsPerDayData: typeof prsPerDayData | null }>("/api/analytics")
+    if (data?.prsPerDayData && data.prsPerDayData.length > 0) {
+        return data.prsPerDayData
+    }
     return [...prsPerDayData]
 }
 
 export async function getIssuesBySeverity(): Promise<typeof issuesBySeverity> {
-    await delay(300)
+    const data = await fetchJson<{ issuesBySeverity: typeof issuesBySeverity | null }>("/api/analytics")
+    if (data?.issuesBySeverity && data.issuesBySeverity.length > 0) {
+        return data.issuesBySeverity
+    }
     return [...issuesBySeverity]
 }
 
 export async function getSecurityVsBugData(): Promise<typeof securityVsBugData> {
-    await delay(300)
+    const data = await fetchJson<{ securityVsBugData: typeof securityVsBugData | null }>("/api/analytics")
+    if (data?.securityVsBugData && data.securityVsBugData.length > 0) {
+        return data.securityVsBugData
+    }
     return [...securityVsBugData]
 }
 
 // ============ Repositories API ============
-export async function getRepositories(): Promise<Repository[]> {
-    await delay(250)
 
+export async function getRepositories(): Promise<Repository[]> {
+    // Try the GitHub repositories endpoint (requires GitHub connection)
     try {
         const response = await fetch("/api/github/repositories", { cache: "no-store" })
         if (response.ok) {
             const data = (await response.json()) as { repositories: Repository[] }
-            repositories = data.repositories
-            return [...repositories]
+            if (data.repositories && data.repositories.length > 0) {
+                repositories = data.repositories
+                return [...repositories]
+            }
         }
     } catch {
         // Fallback to local mock repositories when GitHub is not connected.
@@ -116,7 +131,14 @@ export async function getRepositories(): Promise<Repository[]> {
 }
 
 export async function toggleRepository(id: string): Promise<Repository> {
-    await delay(300)
+    // Try the real endpoint
+    const data = await fetchJson<{ success: boolean } | null>("/api/repositories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, field: "status" }),
+    })
+
+    // Also update local state
     const repo = repositories.find((r) => r.id === id)
     if (!repo) throw new Error("Repository not found")
     repo.status = repo.status === "active" ? "paused" : "active"
@@ -124,7 +146,12 @@ export async function toggleRepository(id: string): Promise<Repository> {
 }
 
 export async function toggleStrictMode(id: string): Promise<Repository> {
-    await delay(200)
+    await fetchJson("/api/repositories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, field: "strict_mode" }),
+    })
+
     const repo = repositories.find((r) => r.id === id)
     if (!repo) throw new Error("Repository not found")
     repo.strictMode = !repo.strictMode
@@ -132,7 +159,12 @@ export async function toggleStrictMode(id: string): Promise<Repository> {
 }
 
 export async function toggleSecurityScan(id: string): Promise<Repository> {
-    await delay(200)
+    await fetchJson("/api/repositories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, field: "security_scan" }),
+    })
+
     const repo = repositories.find((r) => r.id === id)
     if (!repo) throw new Error("Repository not found")
     repo.securityScan = !repo.securityScan
@@ -140,7 +172,12 @@ export async function toggleSecurityScan(id: string): Promise<Repository> {
 }
 
 export async function toggleIgnoreStyling(id: string): Promise<Repository> {
-    await delay(200)
+    await fetchJson("/api/repositories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, field: "ignore_styling" }),
+    })
+
     const repo = repositories.find((r) => r.id === id)
     if (!repo) throw new Error("Repository not found")
     repo.ignoreLint = !repo.ignoreLint
@@ -148,7 +185,12 @@ export async function toggleIgnoreStyling(id: string): Promise<Repository> {
 }
 
 export async function toggleAutoFix(id: string): Promise<Repository> {
-    await delay(200)
+    await fetchJson("/api/repositories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, field: "auto_fix" }),
+    })
+
     const repo = repositories.find((r) => r.id === id)
     if (!repo) throw new Error("Repository not found")
     repo.autoFix = !repo.autoFix
@@ -156,35 +198,45 @@ export async function toggleAutoFix(id: string): Promise<Repository> {
 }
 
 export async function bulkEnableBots(): Promise<Repository[]> {
-    await delay(500)
+    await fetchJson("/api/repositories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "enableAll" }),
+    })
+
     repositories = repositories.map((r) => ({ ...r, status: "active" as const }))
     return [...repositories]
 }
 
 // ============ Pull Requests API ============
+
 export async function getPullRequests(filters?: {
     severity?: string
     type?: string
     autofix?: boolean
 }): Promise<PullRequest[]> {
-    await delay(500)
+    // Try the real endpoint
+    const params = new URLSearchParams()
+    if (filters?.severity) params.set("severity", filters.severity)
+    if (filters?.type) params.set("type", filters.type)
+    if (filters?.autofix !== undefined) params.set("autofix", String(filters.autofix))
+
+    const qs = params.toString()
+    const data = await fetchJson<{ pullRequests: PullRequest[] | null }>(`/api/pull-requests${qs ? `?${qs}` : ""}`)
+    if (data?.pullRequests) {
+        pullRequests = data.pullRequests
+        return [...pullRequests]
+    }
+
+    // Fallback to mock with local filtering
     let filtered = [...pullRequests]
-
-    if (filters?.severity) {
-        filtered = filtered.filter((pr) => pr.severity === filters.severity)
-    }
-    if (filters?.type) {
-        filtered = filtered.filter((pr) => pr.type === filters.type)
-    }
-    if (filters?.autofix !== undefined) {
-        filtered = filtered.filter((pr) => pr.hasAutoFix === filters.autofix)
-    }
-
+    if (filters?.severity) filtered = filtered.filter((pr) => pr.severity === filters.severity)
+    if (filters?.type) filtered = filtered.filter((pr) => pr.type === filters.type)
+    if (filters?.autofix !== undefined) filtered = filtered.filter((pr) => pr.hasAutoFix === filters.autofix)
     return filtered
 }
 
 export async function getPullRequest(id: string): Promise<PullRequest> {
-    await delay(300)
     const pr = pullRequests.find((p) => p.id === id)
     if (!pr) throw new Error("Pull request not found")
     return { ...pr }
@@ -193,12 +245,10 @@ export async function getPullRequest(id: string): Promise<PullRequest> {
 export async function sortPullRequests(
     sortBy: "latest" | "issues" | "severity"
 ): Promise<PullRequest[]> {
-    await delay(300)
     let sorted = [...pullRequests]
 
     switch (sortBy) {
         case "latest":
-            // Already sorted by time in mock
             break
         case "issues":
             sorted = sorted.sort((a, b) => b.issuesFound - a.issuesFound)
@@ -215,22 +265,36 @@ export async function sortPullRequests(
 }
 
 // ============ AI Reviews API ============
+
 export async function getAIReviews(prId?: string): Promise<AIReview[]> {
-    await delay(500)
-
-    const backend = await fetchJson<{ reviews: AIReview[] }>("/api/reviews/history")
-    if (backend?.reviews) {
-        return prId ? backend.reviews.filter((review) => review.prId === prId) : backend.reviews
+    // Try the real endpoint
+    const qs = prId ? `?prId=${prId}` : ""
+    const data = await fetchJson<{ reviews: AIReview[] | null }>(`/api/ai-reviews${qs}`)
+    if (data?.reviews && data.reviews.length > 0) {
+        aiReviews = data.reviews as AIReview[]
+        return [...aiReviews]
     }
 
-    if (prId) {
-        return aiReviews.filter((r) => r.prId === prId)
+    // Fallback to the reviews/history endpoint
+    const historyData = await fetchJson<{ reviews: AIReview[] | null }>("/api/reviews/history")
+    if (historyData?.reviews && historyData.reviews.length > 0) {
+        aiReviews = historyData.reviews as AIReview[]
+        return prId ? aiReviews.filter((r) => r.prId === prId) : [...aiReviews]
     }
+
+    // Final fallback to mock
+    if (prId) return aiReviews.filter((r) => r.prId === prId)
     return [...aiReviews]
 }
 
 export async function applyFix(id: string): Promise<AIReview> {
-    await delay(800)
+    // Try the real endpoint
+    await fetchJson("/api/ai-reviews", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "applied" }),
+    })
+
     const review = aiReviews.find((r) => r.id === id)
     if (!review) throw new Error("Review not found")
     review.status = "applied"
@@ -238,7 +302,12 @@ export async function applyFix(id: string): Promise<AIReview> {
 }
 
 export async function markResolved(id: string): Promise<AIReview> {
-    await delay(300)
+    await fetchJson("/api/ai-reviews", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "applied" }),
+    })
+
     const review = aiReviews.find((r) => r.id === id)
     if (!review) throw new Error("Review not found")
     review.status = "applied"
@@ -246,7 +315,12 @@ export async function markResolved(id: string): Promise<AIReview> {
 }
 
 export async function ignoreRule(id: string): Promise<AIReview> {
-    await delay(200)
+    await fetchJson("/api/ai-reviews", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "dismissed" }),
+    })
+
     const review = aiReviews.find((r) => r.id === id)
     if (!review) throw new Error("Review not found")
     review.status = "dismissed"
@@ -254,25 +328,36 @@ export async function ignoreRule(id: string): Promise<AIReview> {
 }
 
 // ============ Security API ============
+
 export async function getSecurityIssues(filters?: {
     severity?: string
     repo?: string
 }): Promise<SecurityIssue[]> {
-    await delay(500)
+    const params = new URLSearchParams()
+    if (filters?.severity) params.set("severity", filters.severity)
+    if (filters?.repo) params.set("repo", filters.repo)
+
+    const qs = params.toString()
+    const data = await fetchJson<{ issues: SecurityIssue[] | null }>(`/api/security${qs ? `?${qs}` : ""}`)
+    if (data?.issues) {
+        securityIssues = data.issues
+        return [...securityIssues]
+    }
+
+    // Fallback to mock with local filtering
     let filtered = [...securityIssues]
-
-    if (filters?.severity) {
-        filtered = filtered.filter((i) => i.severity === filters.severity)
-    }
-    if (filters?.repo) {
-        filtered = filtered.filter((i) => i.repository === filters.repo)
-    }
-
+    if (filters?.severity) filtered = filtered.filter((i) => i.severity === filters.severity)
+    if (filters?.repo) filtered = filtered.filter((i) => i.repository === filters.repo)
     return filtered
 }
 
 export async function fixSecurityIssue(id: string): Promise<SecurityIssue> {
-    await delay(500)
+    await fetchJson("/api/security", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "fixed" }),
+    })
+
     const issue = securityIssues.find((i) => i.id === id)
     if (!issue) throw new Error("Security issue not found")
     issue.status = "fixed"
@@ -280,7 +365,12 @@ export async function fixSecurityIssue(id: string): Promise<SecurityIssue> {
 }
 
 export async function ignoreSecurityIssue(id: string): Promise<SecurityIssue> {
-    await delay(300)
+    await fetchJson("/api/security", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "ignored" }),
+    })
+
     const issue = securityIssues.find((i) => i.id === id)
     if (!issue) throw new Error("Security issue not found")
     issue.status = "ignored"
@@ -288,8 +378,14 @@ export async function ignoreSecurityIssue(id: string): Promise<SecurityIssue> {
 }
 
 // ============ Performance API ============
+
 export async function getPerformanceIssues(): Promise<PerformanceIssue[]> {
-    await delay(500)
+    const data = await fetchJson<{ issues: PerformanceIssue[] | null }>("/api/performance")
+    if (data?.issues) {
+        performanceIssues = data.issues
+        return [...performanceIssues]
+    }
+
     return [...performanceIssues]
 }
 
@@ -298,13 +394,24 @@ export function calculatePerformanceScore(issuesCount: number): number {
 }
 
 // ============ Rules API ============
+
 export async function getRules(): Promise<RuleSetting[]> {
-    await delay(400)
+    const data = await fetchJson<{ rules: RuleSetting[] | null }>("/api/rules")
+    if (data?.rules) {
+        ruleSettings = data.rules
+        return [...ruleSettings]
+    }
+
     return [...ruleSettings]
 }
 
 export async function toggleRule(id: string): Promise<RuleSetting> {
-    await delay(200)
+    await fetchJson("/api/rules", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ruleId: id }),
+    })
+
     const rule = ruleSettings.find((r) => r.id === id)
     if (!rule) throw new Error("Rule not found")
     rule.enabled = !rule.enabled
@@ -312,40 +419,57 @@ export async function toggleRule(id: string): Promise<RuleSetting> {
 }
 
 export async function applyRulesGlobally(enabled: boolean): Promise<RuleSetting[]> {
-    await delay(500)
+    await fetchJson("/api/rules", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
+    })
+
     ruleSettings = ruleSettings.map((r) => ({ ...r, enabled }))
     return [...ruleSettings]
 }
 
 // ============ Webhooks API ============
+
 export async function getWebhookLogs(filters?: {
     status?: string
 }): Promise<WebhookLog[]> {
-    await delay(400)
-    let filtered = [...webhookLogs]
+    const params = new URLSearchParams()
+    if (filters?.status) params.set("status", filters.status)
 
-    if (filters?.status) {
-        filtered = filtered.filter((l) => l.status === filters.status)
+    const qs = params.toString()
+    const data = await fetchJson<{ logs: WebhookLog[] | null }>(`/api/webhooks${qs ? `?${qs}` : ""}`)
+    if (data?.logs) {
+        webhookLogs = data.logs
+        return [...webhookLogs]
     }
 
+    // Fallback to mock with local filtering
+    let filtered = [...webhookLogs]
+    if (filters?.status) filtered = filtered.filter((l) => l.status === filters.status)
     return filtered
 }
 
 export async function refreshWebhookLogs(): Promise<WebhookLog[]> {
-    await delay(300)
-    // Add a new webhook entry to simulate real-time updates
+    // Re-fetch from backend
+    const data = await fetchJson<{ logs: WebhookLog[] | null }>("/api/webhooks")
+    if (data?.logs) {
+        webhookLogs = data.logs
+        return [...webhookLogs]
+    }
+
+    // Fallback: add a new mock webhook entry to simulate real-time updates
     const newLog = generateNewWebhook()
     webhookLogs = [newLog, ...webhookLogs.slice(0, 19)]
     return [...webhookLogs]
 }
 
 // ============ Settings API ============
-export async function getSettings(): Promise<AppSettings> {
-    await delay(300)
 
-    const backend = await fetchJson<{ settings: AppSettings }>("/api/settings")
-    if (backend?.settings) {
-        appSettings = { ...appSettings, ...backend.settings }
+export async function getSettings(): Promise<AppSettings> {
+    const data = await fetchJson<{ settings: AppSettings | null }>("/api/settings")
+    if (data?.settings) {
+        appSettings = { ...appSettings, ...data.settings }
         return { ...appSettings }
     }
 
@@ -353,18 +477,14 @@ export async function getSettings(): Promise<AppSettings> {
 }
 
 export async function updateSettings(newSettings: Partial<AppSettings>): Promise<AppSettings> {
-    await delay(400)
-
-    const backend = await fetchJson<{ settings: AppSettings }>("/api/settings", {
+    const data = await fetchJson<{ settings: AppSettings | null }>("/api/settings", {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newSettings),
     })
 
-    if (backend?.settings) {
-        appSettings = { ...appSettings, ...backend.settings }
+    if (data?.settings) {
+        appSettings = { ...appSettings, ...data.settings }
         return { ...appSettings }
     }
 
@@ -373,18 +493,14 @@ export async function updateSettings(newSettings: Partial<AppSettings>): Promise
 }
 
 export async function resetSettings(): Promise<AppSettings> {
-    await delay(300)
-
-    const backend = await fetchJson<{ settings: AppSettings }>("/api/settings", {
+    const data = await fetchJson<{ settings: AppSettings | null }>("/api/settings", {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(defaultSettings),
     })
 
-    if (backend?.settings) {
-        appSettings = { ...backend.settings }
+    if (data?.settings) {
+        appSettings = { ...data.settings }
         return { ...appSettings }
     }
 
@@ -393,6 +509,7 @@ export async function resetSettings(): Promise<AppSettings> {
 }
 
 // ============ Real-time simulation ============
+
 export function subscribeToWebhookUpdates(callback: (log: WebhookLog) => void) {
     const interval = setInterval(() => {
         const newLog = generateNewWebhook()
@@ -405,7 +522,6 @@ export function subscribeToWebhookUpdates(callback: (log: WebhookLog) => void) {
 
 export function subscribeToAnalyticsUpdates(callback: (analytics: Analytics) => void) {
     const interval = setInterval(() => {
-        // Simulate slight variations in analytics
         const updatedAnalytics = {
             ...mockAnalytics,
             totalPRs: mockAnalytics.totalPRs + Math.floor(Math.random() * 3),

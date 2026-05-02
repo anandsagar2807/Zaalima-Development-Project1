@@ -1,11 +1,26 @@
 import { NextResponse } from "next/server"
 import { getSystemSettings, updateSystemSettings, type StoredSettings } from "@backend/services/database.service"
 
+function isDatabaseError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return (
+        message.includes("DATABASE_URL") ||
+        message.includes("ECONNREFUSED") ||
+        message.includes("relation") ||
+        message.includes("database") ||
+        message.includes("connect")
+    )
+}
+
 export async function GET() {
     try {
         const settings = await getSystemSettings()
         return NextResponse.json({ settings })
     } catch (error) {
+        // Graceful fallback: return null settings when database is not configured
+        if (isDatabaseError(error)) {
+            return NextResponse.json({ settings: null })
+        }
         return NextResponse.json(
             {
                 error: "Failed to load settings",
@@ -32,6 +47,10 @@ export async function PUT(request: Request) {
 
         return NextResponse.json({ settings })
     } catch (error) {
+        // Graceful fallback: return null settings when database is not configured
+        if (isDatabaseError(error)) {
+            return NextResponse.json({ settings: null })
+        }
         return NextResponse.json(
             {
                 error: "Failed to update settings",
