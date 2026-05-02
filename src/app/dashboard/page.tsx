@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { GitPullRequest, AlertTriangle, Shield, Zap, Clock, Wand2, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -42,6 +43,7 @@ const statIcons = {
 }
 
 export default function DashboardOverview() {
+    const searchParams = useSearchParams()
     const {
         analytics,
         prsPerDayData,
@@ -63,6 +65,25 @@ export default function DashboardOverview() {
             clearError()
         }
     }, [error, clearError])
+
+    // Show success message when redirected from GitHub authorization
+    useEffect(() => {
+        const githubConnected = searchParams.get("github_connected")
+        const githubLogin = searchParams.get("github_login")
+
+        if (githubConnected === "1") {
+            const message = githubLogin
+                ? `GitHub account @${githubLogin} connected successfully!`
+                : "GitHub account connected successfully!"
+            toast.success(message)
+
+            // Clean up URL parameters
+            const url = new URL(window.location.href)
+            url.searchParams.delete("github_connected")
+            url.searchParams.delete("github_login")
+            window.history.replaceState({}, "", url.toString())
+        }
+    }, [searchParams])
 
     // Auto-refresh analytics every 30 seconds
     useEffect(() => {
