@@ -12,6 +12,11 @@ export const env = {
     githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || "",
     databaseUrl: process.env.DATABASE_URL || "",
 
+    // GitHub OAuth (used by connect-github & connect-github-callback)
+    githubClientId: process.env.GITHUB_CLIENT_ID || process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "",
+    githubClientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+    githubOAuthRedirectUri: process.env.GITHUB_OAUTH_REDIRECT_URI || "",
+
     // LLM configuration
     llmApiKey: process.env.LLM_API_KEY || "",
     llmBaseUrl: process.env.LLM_BASE_URL || "https://api.openai.com/v1",

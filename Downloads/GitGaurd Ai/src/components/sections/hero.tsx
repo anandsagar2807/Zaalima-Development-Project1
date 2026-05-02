@@ -11,7 +11,7 @@ const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL || "https://github
 
 export function Hero() {
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32">
             {/* Background Effects */}
             <div className="absolute inset-0 -z-10">
                 {/* Gradient Orbs */}
