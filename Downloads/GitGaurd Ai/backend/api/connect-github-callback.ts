@@ -132,7 +132,7 @@ export async function handleGithubConnectCallback(request: Request) {
         }
     }
 
-    const dashboardUrl = new URL("/github-connected", request.url)
+    const dashboardUrl = new URL("/dashboard", request.url)
     dashboardUrl.searchParams.set("github_connected", "1")
     if (githubLogin) {
         dashboardUrl.searchParams.set("github_login", githubLogin)
