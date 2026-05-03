@@ -12,6 +12,7 @@ import {
     type Analytics,
 } from "@/services/mockData"
 import * as api from "@/services/api"
+import apiClient from "@/services/apiClient"
 
 interface DashboardState {
     // Data states
@@ -48,6 +49,9 @@ interface DashboardState {
     prFilters: string[]
     securityFilters: { severity?: string; repo?: string }
     webhookStatusFilter: string
+
+    // Actions - Dashboard Summary
+    fetchDashboardSummary: () => Promise<void>
 
     // Actions - Analytics
     fetchAnalytics: () => Promise<void>
@@ -145,25 +149,88 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     securityFilters: {},
     webhookStatusFilter: "",
 
+    // Dashboard Summary action
+    fetchDashboardSummary: async () => {
+        set({
+            isLoadingAnalytics: true,
+            isLoadingRepositories: true,
+            isLoadingPRs: true,
+            isLoadingSecurity: true,
+            isLoadingPerformance: true,
+            isLoadingWebhooks: true,
+            isLoadingRules: true,
+            error: null
+        })
+        try {
+            const response = await fetch('/api/dashboard')
+            const data = await response.json()
+            const summary = data.summary
+
+            set({
+                analytics: summary.analytics,
+                pullRequests: summary.pullRequests,
+                securityIssues: summary.securityIssues,
+                performanceIssues: summary.performanceIssues,
+                webhookLogs: summary.webhookLogs,
+                ruleSettings: summary.rules,
+                prsPerDayData: summary.chartData.prsPerDay,
+                issuesBySeverity: summary.chartData.issuesBySeverity,
+                securityVsBugData: summary.chartData.securityVsBug,
+                isLoadingAnalytics: false,
+                isLoadingRepositories: false,
+                isLoadingPRs: false,
+                isLoadingSecurity: false,
+                isLoadingPerformance: false,
+                isLoadingWebhooks: false,
+                isLoadingRules: false,
+            })
+        } catch (error) {
+            console.error('Failed to fetch dashboard summary:', error)
+            set({
+                error: "Failed to fetch dashboard data",
+                isLoadingAnalytics: false,
+                isLoadingRepositories: false,
+                isLoadingPRs: false,
+                isLoadingSecurity: false,
+                isLoadingPerformance: false,
+                isLoadingWebhooks: false,
+                isLoadingRules: false,
+            })
+        }
+    },
+
     // Analytics actions
     fetchAnalytics: async () => {
         set({ isLoadingAnalytics: true, error: null })
         try {
-            const [analytics, prsData, severityData, securityData] = await Promise.all([
-                api.getAnalytics(),
-                api.getPRsPerDayData(),
-                api.getIssuesBySeverity(),
-                api.getSecurityVsBugData(),
-            ])
+            // Try backend API first
+            const data = await apiClient.analytics.get()
             set({
-                analytics,
-                prsPerDayData: prsData,
-                issuesBySeverity: severityData,
-                securityVsBugData: securityData,
+                analytics: data.analytics,
+                prsPerDayData: data.prsPerDayData,
+                issuesBySeverity: data.issuesBySeverity,
+                securityVsBugData: data.securityVsBugData,
                 isLoadingAnalytics: false,
             })
         } catch (error) {
-            set({ error: "Failed to fetch analytics", isLoadingAnalytics: false })
+            // Fallback to mock data
+            try {
+                const [analytics, prsData, severityData, securityData] = await Promise.all([
+                    api.getAnalytics(),
+                    api.getPRsPerDayData(),
+                    api.getIssuesBySeverity(),
+                    api.getSecurityVsBugData(),
+                ])
+                set({
+                    analytics,
+                    prsPerDayData: prsData,
+                    issuesBySeverity: severityData,
+                    securityVsBugData: securityData,
+                    isLoadingAnalytics: false,
+                })
+            } catch (fallbackError) {
+                set({ error: "Failed to fetch analytics", isLoadingAnalytics: false })
+            }
         }
     },
 
@@ -171,10 +238,17 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     fetchRepositories: async () => {
         set({ isLoadingRepositories: true, error: null })
         try {
-            const repos = await api.getRepositories()
-            set({ repositories: repos, isLoadingRepositories: false })
+            // Try backend API first
+            const data = await apiClient.repositories.getAll()
+            set({ repositories: data.repositories, isLoadingRepositories: false })
         } catch (error) {
-            set({ error: "Failed to fetch repositories", isLoadingRepositories: false })
+            // Fallback to mock data
+            try {
+                const repos = await api.getRepositories()
+                set({ repositories: repos, isLoadingRepositories: false })
+            } catch (fallbackError) {
+                set({ error: "Failed to fetch repositories", isLoadingRepositories: false })
+            }
         }
     },
 
@@ -188,14 +262,14 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                 ),
             }))
             try {
-                await api.toggleRepository(id)
+                await apiClient.repositories.toggle(id, 'status')
             } catch (error) {
                 // Revert on error
                 set((state) => ({
                     repositories: state.repositories.map((r) =>
                         r.id === id ? { ...r, status: r.status === "active" ? "paused" : "active" } : r
                     ),
-                })),
+                }))
                 set({ error: "Failed to toggle repository status" })
             }
         }
@@ -210,13 +284,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                 ),
             }))
             try {
-                await api.toggleStrictMode(id)
+                await apiClient.repositories.toggle(id, 'strict_mode')
             } catch (error) {
                 set((state) => ({
                     repositories: state.repositories.map((r) =>
                         r.id === id ? { ...r, strictMode: !r.strictMode } : r
                     ),
-                })),
+                }))
                 set({ error: "Failed to toggle strict mode" })
             }
         }
@@ -302,10 +376,17 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     fetchPullRequests: async (filters) => {
         set({ isLoadingPRs: true, error: null })
         try {
-            const prs = await api.getPullRequests(filters)
-            set({ pullRequests: prs, isLoadingPRs: false })
+            // Try backend API first
+            const data = await apiClient.pullRequests.getAll(filters)
+            set({ pullRequests: data.pullRequests, isLoadingPRs: false })
         } catch (error) {
-            set({ error: "Failed to fetch pull requests", isLoadingPRs: false })
+            // Fallback to mock data
+            try {
+                const prs = await api.getPullRequests(filters)
+                set({ pullRequests: prs, isLoadingPRs: false })
+            } catch (fallbackError) {
+                set({ error: "Failed to fetch pull requests", isLoadingPRs: false })
+            }
         }
     },
 

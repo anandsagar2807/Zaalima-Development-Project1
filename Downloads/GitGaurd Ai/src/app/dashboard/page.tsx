@@ -23,15 +23,7 @@ import {
     Legend,
 } from "recharts"
 
-const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-}
-
-const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-}
+import { containerVariants, itemVariants } from "@/lib/animations"
 
 const statIcons = {
     totalPRs: GitPullRequest,
@@ -225,7 +217,7 @@ export default function DashboardOverview() {
                                             outerRadius={80}
                                             paddingAngle={5}
                                             dataKey="value"
-                                        label={({ name, percent }) =>
+                                            label={({ name, percent }) =>
                                                 `${name} ${((percent || 0) * 100).toFixed(0)}%`
                                             }
                                         >

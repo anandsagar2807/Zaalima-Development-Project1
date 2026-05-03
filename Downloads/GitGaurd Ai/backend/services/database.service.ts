@@ -1,15 +1,11 @@
 import crypto from "node:crypto"
 import { Pool, type PoolClient } from "pg"
-import { env } from "../config/env"
+import { getPool, requirePool } from "../config/database"
 import type { PullRequestContext } from "../types/github-webhook"
 import type { LLMAnalysisResult, LLMIssue } from "../types/llm-analysis"
 
 const SYSTEM_USER_KEY = "gitguard-system"
 const SYSTEM_LOGIN = "GitGuard AI"
-
-const pool = env.databaseUrl
-    ? new Pool({ connectionString: env.databaseUrl })
-    : null
 
 export type StoredReviewHistoryItem = {
     id: string
@@ -51,12 +47,8 @@ const DEFAULT_SETTINGS: StoredSettings = {
     securityScan: true,
 }
 
-function getPool(): Pool {
-    if (!pool) {
-        throw new Error("Missing DATABASE_URL")
-    }
-
-    return pool
+function getDbPool(): Pool {
+    return requirePool()
 }
 
 function hashRepositoryId(owner: string, repo: string): number {
@@ -248,8 +240,8 @@ function normalizeStoredSettings(row: Record<string, unknown> | null): StoredSet
 }
 
 export async function getSystemSettings(): Promise<StoredSettings> {
-    const client = getPool().connect()
-    const connection = await client
+    const pool = getDbPool()
+    const connection = await pool.connect()
 
     try {
         const userId = await ensureSystemUser(connection)
@@ -283,7 +275,8 @@ export async function getSystemSettings(): Promise<StoredSettings> {
 }
 
 export async function updateSystemSettings(partial: Partial<StoredSettings>): Promise<StoredSettings> {
-    const connection = await getPool().connect()
+    const pool = getDbPool()
+    const connection = await pool.connect()
 
     try {
         const userId = await ensureSystemUser(connection)
@@ -377,7 +370,8 @@ export async function saveReviewAnalysis(
     analysis: LLMAnalysisResult,
     reviewResponse?: { id?: number | string; html_url?: string | null }
 ): Promise<void> {
-    const connection = await getPool().connect()
+    const pool = getDbPool()
+    const connection = await pool.connect()
 
     try {
         await connection.query("BEGIN")
@@ -464,7 +458,8 @@ export async function saveReviewAnalysis(
 }
 
 export async function listReviewHistory(): Promise<StoredReviewHistoryItem[]> {
-    const connection = await getPool().connect()
+    const pool = getDbPool()
+    const connection = await pool.connect()
 
     try {
         const result = await connection.query<Record<string, unknown>>(
