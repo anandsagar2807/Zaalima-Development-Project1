@@ -10,7 +10,7 @@ import type { Repository } from "@/services/mockData"
 
 const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+    visible: { opacity: 1, transition: { staggerChildren: 0.02 } },
 }
 
 const itemVariants = {
