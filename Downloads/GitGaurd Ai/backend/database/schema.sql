@@ -6,9 +6,19 @@
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     clerk_user_id TEXT NOT NULL UNIQUE,
-    github_login TEXT,
     email TEXT,
+    name TEXT,
     avatar_url TEXT,
+    github_id TEXT UNIQUE,
+    github_login TEXT,
+    github_avatar TEXT,
+    github_access_token TEXT,
+    github_connected BOOLEAN NOT NULL DEFAULT FALSE,
+    github_profile_url TEXT,
+    github_public_repos INTEGER NOT NULL DEFAULT 0,
+    github_followers INTEGER NOT NULL DEFAULT 0,
+    github_following INTEGER NOT NULL DEFAULT 0,
+    github_connected_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -172,3 +182,5 @@ CREATE INDEX IF NOT EXISTS idx_logs_created_at ON logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_logs_event ON logs(event);
 CREATE INDEX IF NOT EXISTS idx_github_repositories_clerk_user_id ON github_repositories(clerk_user_id);
 CREATE INDEX IF NOT EXISTS idx_scan_runs_clerk_user_id ON scan_runs(clerk_user_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id);
