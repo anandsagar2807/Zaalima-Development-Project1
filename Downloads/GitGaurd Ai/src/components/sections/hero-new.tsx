@@ -4,7 +4,7 @@ import { ArrowRight, Github, Sparkles, LayoutDashboard } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
-const githubRepoUrl = import.meta.env.VITE_GITHUB_REPO_URL || 'https://github.com'
+const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL || 'https://github.com'
 
 export function Hero() {
   return (
