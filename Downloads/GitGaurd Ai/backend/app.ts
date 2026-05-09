@@ -55,8 +55,7 @@ export function createApp(): Express {
   });
   console.log('Test route registered at /api/test');
 
-  // Auth Routes
-  app.use('/auth', authRoutes);
+  // Auth Routes - ONLY use /api/auth prefix
   app.use('/api/auth', authRoutes);
 
   // API Routes

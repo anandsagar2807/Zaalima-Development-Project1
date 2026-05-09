@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 export default function GithubConnectedPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const githubLogin = searchParams.get("github_login")
+    const githubLogin = searchParams?.get("github_login") ?? null
 
     useEffect(() => {
         const timer = window.setTimeout(() => {

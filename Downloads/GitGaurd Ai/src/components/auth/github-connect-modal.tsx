@@ -12,7 +12,7 @@ const CONNECTED_KEY_PREFIX = "gitguard:github-connected:"
 export function GitHubConnectModal() {
     const pathname = usePathname()
     const searchParams = useSearchParams()
-    const prompt = searchParams.get("prompt")
+    const prompt = searchParams?.get("prompt") ?? null
     const { isSignedIn } = useAuth()
     const { user, isLoaded } = useUser()
     const [open, setOpen] = useState(false)
@@ -42,7 +42,7 @@ export function GitHubConnectModal() {
         }
 
         if (!user?.id) return
-        if (searchParams.get("github_connected") === "1") {
+        if (searchParams?.get("github_connected") === "1") {
             window.localStorage.setItem(`${CONNECTED_KEY_PREFIX}${user.id}`, "1")
             window.sessionStorage.removeItem(`${DISMISS_KEY_PREFIX}${user.id}`)
             setOpen(false)

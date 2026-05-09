@@ -11,7 +11,7 @@ export default function ConnectGithubPage() {
     const searchParams = useSearchParams()
     const { user } = useUser()
     const username = user?.username || user?.firstName || user?.primaryEmailAddress?.emailAddress || "your account"
-    const oauthError = searchParams.get("error")
+    const oauthError = searchParams ? searchParams.get("error") : null
 
     return (
         <main className="relative min-h-screen overflow-hidden bg-background px-4 py-24 sm:px-6">
