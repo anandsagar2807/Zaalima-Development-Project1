@@ -60,8 +60,8 @@ export default function DashboardOverview() {
 
     // Show success message when redirected from GitHub authorization
     useEffect(() => {
-        const githubConnected = searchParams.get("github_connected")
-        const githubLogin = searchParams.get("github_login")
+        const githubConnected = searchParams?.get("github_connected")
+        const githubLogin = searchParams?.get("github_login")
 
         if (githubConnected === "1") {
             const message = githubLogin

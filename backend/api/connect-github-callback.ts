@@ -112,23 +112,22 @@ export async function handleGithubConnectCallback(request: Request) {
             return redirectToConnect(request.url, "metadata_persist_failed")
         }
 
+        // Persist to database (optional — skip gracefully if DB not configured)
         const insforgeClient = getInsforgeServerClient()
-        if (!insforgeClient) {
-            return redirectToConnect(request.url, "missing_insforge_config")
-        }
-
-        try {
-            const nowIso = new Date().toISOString()
-            await upsertByLookup("github_connections", "clerk_user_id", userId, {
-                clerk_user_id: userId,
-                github_login: githubLogin || null,
-                access_token: tokenData.access_token,
-                scope: tokenData.scope || null,
-                connected_at: nowIso,
-                updated_at: nowIso,
-            })
-        } catch {
-            return redirectToConnect(request.url, "insforge_persist_failed")
+        if (insforgeClient) {
+            try {
+                const nowIso = new Date().toISOString()
+                await upsertByLookup("github_connections", "clerk_user_id", userId, {
+                    clerk_user_id: userId,
+                    github_login: githubLogin || null,
+                    access_token: tokenData.access_token,
+                    scope: tokenData.scope || null,
+                    connected_at: nowIso,
+                    updated_at: nowIso,
+                })
+            } catch {
+                // DB persist failed — non-fatal, continue with Clerk metadata only
+            }
         }
     }
 

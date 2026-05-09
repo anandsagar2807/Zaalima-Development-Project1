@@ -1,8 +1,19 @@
 import dotenv from "dotenv"
 import path from "path"
+import { fileURLToPath } from "url"
 
-// Load backend/.env.backend relative to CWD (project root when running via npm scripts)
-dotenv.config({ path: path.resolve(process.cwd(), "backend/.env.backend") })
+// Resolve .env.backend relative to this file (backend/config/../.env.backend)
+// This works regardless of CWD — whether started from project root or backend/ dir
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const envPath = path.resolve(__dirname, "../.env.backend")
+
+const dotenvResult = dotenv.config({ path: envPath })
+if (dotenvResult.error) {
+    console.warn(`Warning: Could not load .env.backend from ${envPath}:`, dotenvResult.error.message)
+} else {
+    console.log(`Loaded ${Object.keys(dotenvResult.parsed || {}).length} env vars from ${envPath}`)
+}
 
 const toPositiveInteger = (value: string | undefined, fallback: number): number => {
     const parsed = Number(value)
@@ -20,7 +31,7 @@ export const env = {
     githubClientId: process.env.GITHUB_CLIENT_ID || process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "",
     githubClientSecret: process.env.GITHUB_CLIENT_SECRET || "",
     githubOAuthRedirectUri: process.env.GITHUB_OAUTH_REDIRECT_URI || "",
-    githubCallbackUrl: process.env.GITHUB_CALLBACK_URL || "http://localhost:4000/auth/github/callback",
+    githubCallbackUrl: process.env.GITHUB_CALLBACK_URL || "http://localhost:4000/api/auth/github/callback",
 
     // JWT & Encryption
     jwtSecret: process.env.JWT_SECRET || "default-jwt-secret-change-in-production",

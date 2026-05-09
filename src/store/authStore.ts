@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { cleanupAuthDataSync } from '@/lib/auth-cleanup';
 
 interface User {
   id: string;
@@ -93,20 +94,34 @@ export const useAuthStore = create<AuthState>()(
       },
 
       connectGithub: () => {
-        window.location.href = `${API_URL}/auth/github`;
+        // Use Next.js API route (port 3000) so the redirect_uri matches the GitHub OAuth App callback
+        window.location.href = '/api/connect-github';
       },
 
       logout: async () => {
         try {
-          await fetch(`${API_URL}/auth/logout`, {
+          // Call backend to clear server-side session/cookies
+          await fetch(`${API_URL}/api/auth/logout`, {
             method: 'POST',
             credentials: 'include',
           });
-          get().setUser(null);
-          get().setGithubProfile(null);
         } catch (error) {
-          console.error('Logout failed:', error);
+          console.error('Logout backend call failed:', error);
+          // Continue with local cleanup even if backend call fails
         }
+
+        // Reset Zustand state to initial values
+        set({
+          user: null,
+          githubProfile: null,
+          authenticated: false,
+          githubConnected: false,
+          loading: false,
+        });
+
+        // Clear all persisted auth data from browser storage
+        // This is critical to prevent auto-login after browser reopen
+        cleanupAuthDataSync();
       },
 
       disconnectGithub: async () => {
