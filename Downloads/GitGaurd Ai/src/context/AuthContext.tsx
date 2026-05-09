@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { cleanupAuthData } from '@/lib/auth-cleanup'
 
 interface User {
   id: string
@@ -74,15 +75,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Call backend sign-out to invalidate server-side session
       await fetch('/api/sign-out', {
         method: 'POST',
         credentials: 'include',
       })
-      setUser(null)
-      navigate('/')
     } catch (error) {
-      console.error('Sign out error:', error)
+      console.error('Sign out backend call failed:', error)
+      // Continue with local cleanup even if backend call fails
     }
+
+    // Clear React state
+    setUser(null)
+
+    // Comprehensive cleanup of all persisted auth data
+    // This clears localStorage, sessionStorage, cookies, and IndexedDB
+    await cleanupAuthData()
+
+    // Navigate to home page
+    navigate('/')
   }
 
   return (

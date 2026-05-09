@@ -17,26 +17,14 @@ const GITHUB_SCOPES = ['read:user', 'user:email', 'repo', 'read:org'];
 
 /**
  * GET /auth/github
- * Initiates GitHub OAuth flow
+ * Redirects to the Next.js OAuth flow so the redirect_uri matches
+ * the GitHub OAuth App's registered callback URL.
  */
 router.get('/github', (req: Request, res: Response) => {
   try {
-    // Generate CSRF protection state token
-    const state = generateStateToken();
-
-    // Store state in cookie for verification
-    res.cookie('github_oauth_state', state, {
-      httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: 'lax',
-      maxAge: 10 * 60 * 1000, // 10 minutes
-    });
-
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      GITHUB_CALLBACK_URL
-    )}&scope=${GITHUB_SCOPES.join(' ')}&state=${state}`;
-
-    res.redirect(githubAuthUrl);
+    // Redirect to the Next.js connect-github route which handles the full OAuth flow
+    // The GitHub OAuth App callback is registered as http://localhost:3000/api/connect-github/callback
+    res.redirect(`${FRONTEND_URL}/api/connect-github`);
   } catch (error) {
     logger.error('GitHub OAuth initiation failed', { error });
     res.status(500).json({ error: 'Failed to initiate GitHub authorization' });
@@ -262,22 +250,55 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
 
 /**
  * POST /auth/logout
- * Logout user
+ * Logout user — clears all auth cookies comprehensively.
+ * Does NOT require authMiddleware so that a client with an expired/missing
+ * token can still trigger a full cookie cleanup.
  */
-router.post('/logout', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/logout', async (req: AuthRequest, res: Response) => {
   try {
-    res.clearCookie('token');
+    // 1. Clear JWT token cookie (primary auth cookie)
+    res.clearCookie('token', { path: '/' });
 
-    await createLog({
-      userId: Number(req.userId),
-      level: 'info',
-      event: 'auth',
-      message: 'User logged out',
-    });
+    // 2. Clear GitHub OAuth state cookie
+    res.clearCookie('github_oauth_state', { path: '/' });
+
+    // 3. Clear all GitGuard custom cookies
+    res.clearCookie('gitguard_github_connected', { path: '/' });
+    res.clearCookie('gitguard_github_login', { path: '/' });
+    res.clearCookie('gitguard_github_oauth_state', { path: '/' });
+
+    // 4. Clear Clerk cookies (in case they're accessible on this domain)
+    res.clearCookie('__session', { path: '/' });
+    res.clearCookie('__client_uat', { path: '/' });
+
+    // 5. Log the logout if we have a user ID
+    if (req.userId) {
+      await createLog({
+        userId: Number(req.userId),
+        level: 'info',
+        event: 'auth',
+        message: 'User logged out',
+      }).catch(() => {
+        // Log creation failure is non-fatal
+      });
+    }
+
+    // 6. Add cache-control headers to prevent caching of this response
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
 
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
     logger.error('Logout failed', { error });
+
+    // Even on error, attempt to clear cookies
+    res.clearCookie('token', { path: '/' });
+    res.clearCookie('github_oauth_state', { path: '/' });
+    res.clearCookie('gitguard_github_connected', { path: '/' });
+    res.clearCookie('gitguard_github_login', { path: '/' });
+    res.clearCookie('gitguard_github_oauth_state', { path: '/' });
+
     res.status(500).json({ error: 'Logout failed' });
   }
 });
