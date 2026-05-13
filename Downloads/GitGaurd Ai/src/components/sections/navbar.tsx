@@ -10,6 +10,7 @@ import { SocialAuthButtons } from "@/components/auth/social-auth-buttons"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { usePathname } from "next/navigation"
+import { ClerkGuard } from "@/components/auth/ClerkGuard"
 
 const navItems = [
     { name: "Features", href: "#features" },
@@ -27,7 +28,6 @@ const dashboardNavItems = [
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
-    const { isSignedIn } = useAuth()
     const isDashboardRoute = pathname?.startsWith("/dashboard")
     const activeNavItems = isDashboardRoute ? dashboardNavItems : navItems
 
@@ -64,21 +64,15 @@ export function Navbar() {
                     <div className="flex items-center gap-3 justify-self-end">
                         <ThemeToggle />
                         <div className="hidden md:flex items-center gap-3">
-                            {isSignedIn ? (
-                                <>
-                                    <Link href="/dashboard">
-                                        <Button variant="ghost" size="sm" className="gap-2">
-                                            <LayoutDashboard className="h-4 w-4" />
-                                            Dashboard
-                                        </Button>
+                            <ClerkGuard
+                                fallback={
+                                    <Link href="/sign-in">
+                                        <Button variant="default" size="sm">Sign In</Button>
                                     </Link>
-                                    <UserButton afterSignOutUrl="/" />
-                                </>
-                            ) : (
-                                <>
-                                    <SocialAuthButtons size="sm" />
-                                </>
-                            )}
+                                }
+                            >
+                                <ClerkAuthSection />
+                            </ClerkGuard>
                         </div>
                         <button
                             className="md:hidden p-2"
@@ -110,23 +104,15 @@ export function Navbar() {
                                 </Link>
                             ))}
                             <div className="flex flex-col gap-2 pt-4 border-t">
-                                {isSignedIn ? (
-                                    <>
-                                        <Link href="/dashboard" onClick={() => setIsOpen(false)}>
-                                            <Button variant="ghost" className="w-full gap-2">
-                                                <LayoutDashboard className="h-4 w-4" />
-                                                Dashboard
-                                            </Button>
+                                <ClerkGuard
+                                    fallback={
+                                        <Link href="/sign-in" onClick={() => setIsOpen(false)}>
+                                            <Button variant="default" className="w-full">Sign In</Button>
                                         </Link>
-                                        <div className="flex items-center justify-center">
-                                            <UserButton afterSignOutUrl="/" />
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <SocialAuthButtons fullWidth />
-                                    </>
-                                )}
+                                    }
+                                >
+                                    <ClerkMobileAuthSection onClose={() => setIsOpen(false)} />
+                                </ClerkGuard>
                             </div>
                         </div>
                     </motion.div>
@@ -134,4 +120,48 @@ export function Navbar() {
             </AnimatePresence>
         </nav>
     )
+}
+
+/** Desktop auth section — uses Clerk hooks, must be inside ClerkProvider */
+function ClerkAuthSection() {
+    const { isSignedIn } = useAuth()
+
+    if (isSignedIn) {
+        return (
+            <>
+                <Link href="/dashboard">
+                    <Button variant="ghost" size="sm" className="gap-2">
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
+                    </Button>
+                </Link>
+                <UserButton afterSignOutUrl="/" />
+            </>
+        )
+    }
+
+    return <SocialAuthButtons size="sm" />
+}
+
+/** Mobile auth section — uses Clerk hooks, must be inside ClerkProvider */
+function ClerkMobileAuthSection({ onClose }: { onClose: () => void }) {
+    const { isSignedIn } = useAuth()
+
+    if (isSignedIn) {
+        return (
+            <>
+                <Link href="/dashboard" onClick={onClose}>
+                    <Button variant="ghost" className="w-full gap-2">
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
+                    </Button>
+                </Link>
+                <div className="flex items-center justify-center">
+                    <UserButton afterSignOutUrl="/" />
+                </div>
+            </>
+        )
+    }
+
+    return <SocialAuthButtons fullWidth />
 }

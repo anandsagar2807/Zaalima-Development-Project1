@@ -1,13 +1,15 @@
 "use client"
 
+import { Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { Activity, CheckCircle2, FileText, Mail, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import AuthorizeGithubButton from "@/components/AuthorizeGithubButton"
 
-export default function ConnectGithubPage() {
+function ConnectGithubContent() {
     const searchParams = useSearchParams()
     const { user } = useUser()
     const username = user?.username || user?.firstName || user?.primaryEmailAddress?.emailAddress || "your account"
@@ -85,12 +87,22 @@ export default function ConnectGithubPage() {
                         <Link href="/dashboard">
                             <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
                         </Link>
-                        <a href="/api/connect-github" target="_self" rel="noreferrer">
-                            <Button className="w-full bg-gradient-to-r from-emerald-600 to-green-500 text-white hover:from-emerald-700 hover:to-green-600 sm:w-auto">Authorize GitHub</Button>
-                        </a>
+                        <AuthorizeGithubButton size="lg" className="w-full sm:w-auto" />
                     </div>
                 </div>
             </div>
         </main>
+    )
+}
+
+export default function ConnectGithubPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <ConnectGithubContent />
+        </Suspense>
     )
 }

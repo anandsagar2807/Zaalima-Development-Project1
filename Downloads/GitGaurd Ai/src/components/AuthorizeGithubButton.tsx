@@ -9,7 +9,7 @@ interface AuthorizeGithubButtonProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function AuthorizeGithubButton({
+export default function AuthorizeGithubButton({
   className,
   variant = 'default',
   size = 'md',
@@ -30,9 +30,9 @@ export function AuthorizeGithubButton({
 
   const variantClasses = {
     default:
-      'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white border border-gray-700',
+      'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border border-green-600',
     outline:
-      'bg-transparent hover:bg-gray-900/50 text-gray-100 border border-gray-700 hover:border-gray-600',
+      'bg-transparent hover:bg-green-900/50 text-green-100 border border-green-700 hover:border-green-600',
   };
 
   return (
@@ -63,4 +63,10 @@ export function AuthorizeGithubButton({
       </span>
     </button>
   );
+}
+
+export { AuthorizeGithubButton };
+
+export function AuthorizeGitHubButton(props: AuthorizeGithubButtonProps) {
+  return <AuthorizeGithubButton {...props} />;
 }

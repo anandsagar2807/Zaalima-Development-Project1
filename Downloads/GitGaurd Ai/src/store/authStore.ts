@@ -75,7 +75,7 @@ export const useAuthStore = create<AuthState>()(
       checkSession: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/auth/me`, {
+          const response = await fetch(`${API_URL}/api/dashboard`, {
             credentials: 'include',
           });
 
@@ -94,14 +94,14 @@ export const useAuthStore = create<AuthState>()(
       },
 
       connectGithub: () => {
-        // Use Next.js API route (port 3000) so the redirect_uri matches the GitHub OAuth App callback
-        window.location.href = '/api/connect-github';
+        // Redirect to backend GitHub OAuth endpoint
+        window.location.href = `${API_URL}/api/auth/github`;
       },
 
       logout: async () => {
         try {
           // Call backend to clear server-side session/cookies
-          await fetch(`${API_URL}/api/auth/logout`, {
+          await fetch(`${API_URL}/api/sign-out`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -126,7 +126,7 @@ export const useAuthStore = create<AuthState>()(
 
       disconnectGithub: async () => {
         try {
-          const response = await fetch(`${API_URL}/api/github/disconnect`, {
+          const response = await fetch(`${API_URL}/api/settings`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -157,7 +157,7 @@ export const useAuthStore = create<AuthState>()(
       fetchGithubProfile: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/github/profile`, {
+          const response = await fetch(`${API_URL}/api/dashboard`, {
             credentials: 'include',
           });
 
@@ -178,7 +178,7 @@ export const useAuthStore = create<AuthState>()(
       syncGithubProfile: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/github/sync`, {
+          const response = await fetch(`${API_URL}/api/dashboard`, {
             method: 'POST',
             credentials: 'include',
           });

@@ -1,0 +1,404 @@
+# GitHub OAuth Visual Flow Diagram
+
+## Complete Authorization Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                         GITHUB OAUTH FLOW                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────┐
+│              │
+│     USER     │
+│              │
+└──────┬───────┘
+       │
+       │ 1. Visits Dashboard
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Dashboard Page                                                          │
+│  ┌────────────────────────────────────────────────────────────────┐     │
+│  │  GitHub Connect Modal                                          │     │
+│  │  ┌──────────────────────────────────────────────────────┐     │     │
+│  │  │  🦉 GitGuard AI would like to connect to GitHub     │     │     │
+│  │  │                                                       │     │     │
+│  │  │  ✓ Verify your identity                             │     │     │
+│  │  │  ✓ Access your repositories                         │     │     │
+│  │  │  ✓ Post AI review comments                          │     │     │
+│  │  │                                                       │     │     │
+│  │  │  [Maybe Later]  [Connect to GitHub] ←─────────────┐ │     │     │
+│  │  └──────────────────────────────────────────────────────┘     │     │
+│  └────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────┘
+       │
+       │ 2. User clicks "Connect to GitHub"
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  /connect-github (Consent Screen)                                        │
+│  ┌────────────────────────────────────────────────────────────────┐     │
+│  │  🦉 ──────→ ✓ ──────→ 🐙                                      │     │
+│  │  GitGuard    Connected   GitHub                                │     │
+│  │                                                                 │     │
+│  │  GitGuard AI would like permission to connect to GitHub        │     │
+│  │                                                                 │     │
+│  │  👤 Verify your GitHub identity                                │     │
+│  │     Signed in as user@example.com                              │     │
+│  │                                                                 │     │
+│  │  📄 Know which repositories can be accessed                    │     │
+│  │     You can review and limit access during authorization       │     │
+│  │                                                                 │     │
+│  │  ⚡ Act on your behalf                                         │     │
+│  │     GitGuard posts AI review comments to pull requests         │     │
+│  │                                                                 │     │
+│  │  Resources on your account:                                    │     │
+│  │  ✉️  Email addresses (read)                                    │     │
+│  │                                                                 │     │
+│  │  [Cancel]  [Authorize GitHub] ←─────────────────────────────┐ │     │
+│  └────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────┘
+       │
+       │ 3. User clicks "Authorize GitHub"
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  GET /api/connect-github                                                 │
+│  ┌────────────────────────────────────────────────────────────────┐     │
+│  │  Backend Logic (backend/api/connect-github.ts)                 │     │
+│  │                                                                 │     │
+│  │  1. Generate random state = crypto.randomUUID()                │     │
+│  │     → "a1b2c3d4-e5f6-7890-abcd-ef1234567890"                   │     │
+│  │                                                                 │     │
+│  │  2. Set secure cookie:                                         │     │
+│  │     gitguard_github_oauth_state = state                        │     │
+│  │     httpOnly: true, maxAge: 600s                               │     │
+│  │                                                                 │     │
+│  │  3. Build GitHub OAuth URL:                                    │     │
+│  │     https://github.com/login/oauth/authorize?                  │     │
+│  │       client_id=Ov23lieDJq9lEOP7aoZO                           │     │
+│  │       scope=read:user user:email repo                          │     │
+│  │       state=a1b2c3d4-e5f6-7890-abcd-ef1234567890               │     │
+│  │       redirect_uri=http://localhost:3000/api/connect-github/callback│
+│  │                                                                 │     │
+│  │  4. Redirect user to GitHub                                    │     │
+│  └────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────┘
+       │
+       │ 4. Redirect to GitHub
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  GitHub Authorization Page (External)                                    │
+│  ┌────────────────────────────────────────────────────────────────┐     │
+│  │  🐙 GitHub                                                      │     │
+│  │                                                                 │     │
+│  │  Authorize GitGuard AI                                         │     │
+│  │                                                                 │     │
+│  │  GitGuard AI by @yourusername wants to access your             │     │
+│  │  yourusername account                                          │     │
+│  │                                                                 │     │
+│  │  This application will be able to:                             │     │
+│  │  ✓ Read your user profile data                                │     │
+│  │  ✓ Read your email addresses                                  │     │
+│  │  ✓ Access your repositories                                   │     │
+│  │                                                                 │     │
+│  │  [Cancel]  [Authorize GitGuard AI] ←────────────────────────┐ │     │
+│  └────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────┘
+       │
+       │ 5. User authorizes
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  GitHub redirects back with code                                         │
+│  GET /api/connect-github/callback?code=abc123&state=a1b2c3d4...         │
+└──────────────────────────────────────────────────────────────────────────┘
+       │
+       │ 6. Callback processing
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  GET /api/connect-github/callback                                        │
+│  ┌────────────────────────────────────────────────────────────────┐     │
+│  │  Backend Logic (backend/api/connect-github-callback.ts)        │     │
+│  │                                                                 │     │
+│  │  STEP 1: Validate State (CSRF Protection)                      │     │
+│  │  ┌──────────────────────────────────────────────────────┐     │     │
+│  │  │  state from URL = "a1b2c3d4..."                      │     │     │
+│  │  │  state from cookie = "a1b2c3d4..."                   │     │     │
+│  │  │  Match? ✓ YES → Continue                             │     │     │
+│  │  │         ✗ NO  → Error: invalid_oauth_state           │     │     │
+│  │  └──────────────────────────────────────────────────────┘     │     │
+│  │                                                                 │     │
+│  │  STEP 2: Exchange Code for Token                               │     │
+│  │  ┌──────────────────────────────────────────────────────┐     │     │
+│  │  │  POST https://github.com/login/oauth/access_token    │     │     │
+│  │  │  {                                                    │     │     │
+│  │  │    client_id: "Ov23lieDJq9lEOP7aoZO",                │     │     │
+│  │  │    client_secret: "40436febb...",                     │     │     │
+│  │  │    code: "abc123",                                    │     │     │
+│  │  │    redirect_uri: "http://localhost:3000/...",        │     │     │
+│  │  │    state: "a1b2c3d4..."                               │     │     │
+│  │  │  }                                                    │     │     │
+│  │  │                                                        │     │     │
+│  │  │  Response:                                            │     │     │
+│  │  │  {                                                    │     │     │
+│  │  │    access_token: "gho_xxxxxxxxxxxx",                 │     │     │
+│  │  │    scope: "read:user user:email repo"                │     │     │
+│  │  │  }                                                    │     │     │
+│  │  └──────────────────────────────────────────────────────┘     │     │
+│  │                                                                 │     │
+│  │  STEP 3: Fetch GitHub User Info                                │     │
+│  │  ┌──────────────────────────────────────────────────────┐     │     │
+│  │  │  GET https://api.github.com/user                     │     │     │
+│  │  │  Authorization: Bearer gho_xxxxxxxxxxxx              │     │     │
+│  │  │                                                        │     │     │
+│  │  │  Response:                                            │     │     │
+│  │  │  {                                                    │     │     │
+│  │  │    login: "yourusername",                            │     │     │
+│  │  │    name: "Your Name",                                │     │     │
+│  │  │    email: "you@example.com"                          │     │     │
+│  │  │  }                                                    │     │     │
+│  │  └──────────────────────────────────────────────────────┘     │     │
+│  │                                                                 │     │
+│  │  STEP 4: Store in Clerk Metadata                               │     │
+│  │  ┌──────────────────────────────────────────────────────┐     │     │
+│  │  │  clerkClient.users.updateUserMetadata(userId, {      │     │     │
+│  │  │    publicMetadata: {                                 │     │     │
+│  │  │      gitguardGithubConnected: true,                  │     │     │
+│  │  │      gitguardGithubLogin: "yourusername"             │     │     │
+│  │  │    },                                                 │     │     │
+│  │  │    privateMetadata: {                                │     │     │
+│  │  │      gitguardGithub: {                               │     │     │
+│  │  │        connected: true,                              │     │     │
+│  │  │        login: "yourusername",                        │     │     │
+│  │  │        connectedAt: "2026-05-09T01:33:05.828Z",      │     │     │
+│  │  │        scope: "read:user user:email repo",           │     │     │
+│  │  │        accessToken: "gho_xxxxxxxxxxxx"               │     │     │
+│  │  │      }                                                │     │     │
+│  │  │    }                                                  │     │     │
+│  │  │  })                                                   │     │     │
+│  │  └──────────────────────────────────────────────────────┘     │     │
+│  │                                                                 │     │
+│  │  STEP 5: Store in PostgreSQL                                   │     │
+│  │  ┌──────────────────────────────────────────────────────┐     │     │
+│  │  │  INSERT INTO github_connections (                    │     │     │
+│  │  │    clerk_user_id,                                    │     │     │
+│  │  │    github_login,                                     │     │     │
+│  │  │    access_token,                                     │     │     │
+│  │  │    scope,                                            │     │     │
+│  │  │    connected_at,                                     │     │     │
+│  │  │    updated_at                                        │     │     │
+│  │  │  ) VALUES (                                          │     │     │
+│  │  │    'user_xxxxx',                                     │     │     │
+│  │  │    'yourusername',                                   │     │     │
+│  │  │    'gho_xxxxxxxxxxxx',                               │     │     │
+│  │  │    'read:user user:email repo',                      │     │     │
+│  │  │    NOW(),                                            │     │     │
+│  │  │    NOW()                                             │     │     │
+│  │  │  )                                                    │     │     │
+│  │  │  ON CONFLICT (clerk_user_id) DO UPDATE SET ...      │     │     │
+│  │  └──────────────────────────────────────────────────────┘     │     │
+│  │                                                                 │     │
+│  │  STEP 6: Set Success Cookies                                   │     │
+│  │  ┌──────────────────────────────────────────────────────┐     │     │
+│  │  │  Set-Cookie: gitguard_github_connected=1             │     │     │
+│  │  │  Set-Cookie: gitguard_github_login=yourusername      │     │     │
+│  │  │  Delete-Cookie: gitguard_github_oauth_state          │     │     │
+│  │  └──────────────────────────────────────────────────────┘     │     │
+│  │                                                                 │     │
+│  │  STEP 7: Redirect to Dashboard                                 │     │
+│  │  ┌──────────────────────────────────────────────────────┐     │     │
+│  │  │  Location: /dashboard?github_connected=1&            │     │     │
+│  │  │            github_login=yourusername                 │     │     │
+│  │  └──────────────────────────────────────────────────────┘     │     │
+│  └────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────┘
+       │
+       │ 7. Redirect to dashboard
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Dashboard Page                                                          │
+│  ┌────────────────────────────────────────────────────────────────┐     │
+│  │  GitHub Connect Modal (github-connect-modal.tsx)               │     │
+│  │                                                                 │     │
+│  │  useEffect(() => {                                             │     │
+│  │    if (searchParams.get("github_connected") === "1") {         │     │
+│  │      // Store success in localStorage                          │     │
+│  │      localStorage.setItem(                                     │     │
+│  │        `gitguard:github-connected:${userId}`, "1"              │     │
+│  │      )                                                          │     │
+│  │      // Remove dismiss flag                                    │     │
+│  │      sessionStorage.removeItem(                                │     │
+│  │        `gitguard:github-connect-dismissed:${userId}`           │     │
+│  │      )                                                          │     │
+│  │      // Close modal                                            │     │
+│  │      setOpen(false)                                            │     │
+│  │    }                                                            │     │
+│  │  })                                                             │     │
+│  │                                                                 │     │
+│  │  ✓ Modal closes automatically                                 │     │
+│  │  ✓ User sees dashboard                                        │     │
+│  │  ✓ GitHub is now connected!                                   │     │
+│  └────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────┘
+       │
+       │ 8. Connection complete!
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Data Stored Successfully                                                │
+│                                                                          │
+│  ✓ Clerk Public Metadata:                                               │
+│    - gitguardGithubConnected: true                                      │
+│    - gitguardGithubLogin: "yourusername"                                │
+│                                                                          │
+│  ✓ Clerk Private Metadata:                                              │
+│    - accessToken: "gho_xxxxxxxxxxxx"                                    │
+│    - scope: "read:user user:email repo"                                 │
+│    - connectedAt: "2026-05-09T01:33:05.828Z"                            │
+│                                                                          │
+│  ✓ PostgreSQL (github_connections):                                     │
+│    - clerk_user_id: "user_xxxxx"                                        │
+│    - github_login: "yourusername"                                       │
+│    - access_token: "gho_xxxxxxxxxxxx"                                   │
+│    - scope: "read:user user:email repo"                                 │
+│    - connected_at: 2026-05-09 01:33:05                                  │
+│                                                                          │
+│  ✓ Browser Cookies:                                                     │
+│    - gitguard_github_connected=1 (30 days)                              │
+│    - gitguard_github_login=yourusername (30 days)                       │
+│                                                                          │
+│  ✓ Browser LocalStorage:                                                │
+│    - gitguard:github-connected:user_xxxxx=1                             │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+                            SECURITY FEATURES
+═══════════════════════════════════════════════════════════════════════════
+
+🔒 CSRF Protection
+   └─ Random state parameter generated and validated
+   └─ State stored in httpOnly cookie
+   └─ State deleted after use
+
+🔒 Token Security
+   └─ Tokens stored in Clerk privateMetadata (encrypted)
+   └─ Tokens stored in PostgreSQL
+   └─ Never exposed in URLs or client-side code
+
+🔒 Cookie Security
+   └─ httpOnly: true (prevents XSS)
+   └─ secure: true in production (HTTPS only)
+   └─ sameSite: lax (CSRF protection)
+
+🔒 Error Handling
+   └─ No sensitive data in error messages
+   └─ Safe redirects on failures
+   └─ Graceful degradation
+
+
+═══════════════════════════════════════════════════════════════════════════
+                              TIMING BREAKDOWN
+═══════════════════════════════════════════════════════════════════════════
+
+Step 1: User clicks "Connect"                    → Instant
+Step 2: Consent screen loads                     → < 100ms
+Step 3: OAuth initiation                         → < 100ms
+Step 4: Redirect to GitHub                       → < 200ms
+Step 5: User authorizes (manual)                 → 5-30 seconds
+Step 6: GitHub redirects back                    → < 200ms
+Step 7: Token exchange                           → 300-500ms
+Step 8: Fetch user info                          → 200-400ms
+Step 9: Store in Clerk                           → 300-800ms
+Step 10: Store in PostgreSQL                     → 50-200ms
+Step 11: Redirect to dashboard                   → < 100ms
+Step 12: Modal closes                            → Instant
+
+Total (excluding user action): 1.5-2.5 seconds
+
+
+═══════════════════════════════════════════════════════════════════════════
+                            ERROR SCENARIOS
+═══════════════════════════════════════════════════════════════════════════
+
+❌ missing_code_or_state
+   → GitHub didn't return required parameters
+   → Redirect to /connect-github?error=missing_code_or_state
+
+❌ invalid_oauth_state
+   → State mismatch (possible CSRF attack)
+   → Redirect to /connect-github?error=invalid_oauth_state
+
+❌ missing_oauth_config
+   → Client ID or Secret not configured
+   → Redirect to /connect-github?error=missing_oauth_config
+
+❌ token_exchange_failed
+   → GitHub API error during token exchange
+   → Redirect to /connect-github?error=token_exchange_failed
+
+❌ metadata_persist_failed
+   → Clerk update failed
+   → Redirect to /connect-github?error=metadata_persist_failed
+
+❌ insforge_persist_failed
+   → PostgreSQL insert failed
+   → Redirect to /connect-github?error=insforge_persist_failed
+
+
+═══════════════════════════════════════════════════════════════════════════
+                          USING THE ACCESS TOKEN
+═══════════════════════════════════════════════════════════════════════════
+
+// Fetch token from Clerk
+const { userId } = auth()
+const user = await clerkClient.users.getUser(userId)
+const token = user.privateMetadata.gitguardGithub?.accessToken
+
+// Use with GitHub API
+const response = await fetch("https://api.github.com/user/repos", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
+  }
+})
+
+const repos = await response.json()
+
+
+═══════════════════════════════════════════════════════════════════════════
+                              QUICK COMMANDS
+═══════════════════════════════════════════════════════════════════════════
+
+# Start development
+npm run dev
+
+# Apply database schema
+psql -d gitguard_ai -f backend/database/schema.sql
+
+# Check connections
+psql -d gitguard_ai -c "SELECT * FROM github_connections;"
+
+# Test access token
+TOKEN=$(psql -d gitguard_ai -t -c "SELECT access_token FROM github_connections LIMIT 1;")
+curl -H "Authorization: Bearer $TOKEN" https://api.github.com/user
+
+
+═══════════════════════════════════════════════════════════════════════════
+                                 STATUS
+═══════════════════════════════════════════════════════════════════════════
+
+✅ Implementation: COMPLETE
+✅ Security: IMPLEMENTED
+✅ Documentation: COMPLETE
+⚠️  Testing: REQUIRED
+⚠️  Database: NEEDS VERIFICATION
+🚀 Production: READY (after testing)

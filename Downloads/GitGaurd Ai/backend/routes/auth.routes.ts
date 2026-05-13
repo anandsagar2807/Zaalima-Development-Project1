@@ -17,14 +17,30 @@ const GITHUB_SCOPES = ['read:user', 'user:email', 'repo', 'read:org'];
 
 /**
  * GET /auth/github
- * Redirects to the Next.js OAuth flow so the redirect_uri matches
- * the GitHub OAuth App's registered callback URL.
+ * Initiates GitHub OAuth flow by redirecting to GitHub authorization page
  */
 router.get('/github', (req: Request, res: Response) => {
   try {
-    // Redirect to the Next.js connect-github route which handles the full OAuth flow
-    // The GitHub OAuth App callback is registered as http://localhost:3000/api/connect-github/callback
-    res.redirect(`${FRONTEND_URL}/api/connect-github`);
+    // Generate state token for CSRF protection
+    const state = generateStateToken();
+
+    // Store state in cookie
+    res.cookie('github_oauth_state', state, {
+      httpOnly: true,
+      secure: env.nodeEnv === 'production',
+      sameSite: 'lax',
+      maxAge: 10 * 60 * 1000, // 10 minutes
+    });
+
+    // Build GitHub authorization URL
+    const authUrl = new URL('https://github.com/login/oauth/authorize');
+    authUrl.searchParams.set('client_id', GITHUB_CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri', GITHUB_CALLBACK_URL);
+    authUrl.searchParams.set('scope', GITHUB_SCOPES.join(' '));
+    authUrl.searchParams.set('state', state);
+
+    logger.info('Redirecting to GitHub OAuth', { redirectUri: GITHUB_CALLBACK_URL });
+    res.redirect(authUrl.toString());
   } catch (error) {
     logger.error('GitHub OAuth initiation failed', { error });
     res.status(500).json({ error: 'Failed to initiate GitHub authorization' });
@@ -123,7 +139,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
       }
 
       // Update existing user with GitHub data
-      user = await updateUserGitHub(user.id, {
+      user = await updateUserGitHub(String(user._id), {
         githubId: String(githubUser.id),
         githubUsername: githubUser.login,
         githubAvatar: githubUser.avatar_url,
@@ -141,7 +157,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
       const existingGithubUser = await findUserByGithubId(String(githubUser.id));
       if (existingGithubUser) {
         // Update the existing GitHub user with the email
-        user = await updateUserGitHub(existingGithubUser.id, {
+        user = await updateUserGitHub(String(existingGithubUser._id), {
           githubAccessToken: accessToken,
           githubConnected: true,
           githubUsername: githubUser.login,
@@ -181,7 +197,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
 
     // Log the connection
     await createLog({
-      userId: user.id,
+      userId: String(user._id),
       level: 'info',
       event: 'github_connect',
       message: 'GitHub account connected successfully',
@@ -193,7 +209,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
 
     // Generate JWT token
     const jwtToken = generateToken({
-      userId: String(user.id),
+      userId: String(user._id),
       email: user.email || email,
     });
 
@@ -206,12 +222,12 @@ router.get('/github/callback', async (req: Request, res: Response) => {
     });
 
     logger.info('GitHub OAuth completed successfully', {
-      userId: user.id,
+      userId: user._id,
       githubUsername: githubUser.login,
     });
 
     // Redirect to dashboard with success
-    res.redirect(`${FRONTEND_URL}/dashboard/integrations?success=true`);
+    res.redirect(`${FRONTEND_URL}/dashboard?github_connected=true`);
   } catch (error) {
     logger.error('GitHub OAuth callback error', { error });
     res.redirect(`${FRONTEND_URL}/dashboard/integrations?error=callback_failed`);
@@ -228,7 +244,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     res.json({
       user: {
-        id: user.id,
+        id: user._id,
         email: user.email,
         name: user.name,
         avatar: user.avatar_url,
@@ -274,7 +290,7 @@ router.post('/logout', async (req: AuthRequest, res: Response) => {
     // 5. Log the logout if we have a user ID
     if (req.userId) {
       await createLog({
-        userId: Number(req.userId),
+        userId: String(req.userId),
         level: 'info',
         event: 'auth',
         message: 'User logged out',
