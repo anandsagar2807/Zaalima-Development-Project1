@@ -127,21 +127,21 @@ MONGO_URI=mongodb+srv://sagariare7_db_user:GitGaurd2807@cluster0.1a0sbd0.mongodb
 
 # JWT & Encryption
 JWT_SECRET=kfnR0zqEZHIE/puobwpiTX+F+FhxK+yUW/rUhiG69JA=
-ENCRYPTION_KEY=DHtyJ7SSD6vPFtLM8j80UsMHhorCfYKVWojs88h+s5U=
+ENCRYPTION_KEY=************ (REDACTED)
 
 # GitHub OAuth
 GITHUB_CLIENT_ID=Ov23lieDJq9lEOP7aoZO
-GITHUB_CLIENT_SECRET=05f4e38aff71bf07a26b8c4e454ea1d5ffe6df7a
+GITHUB_CLIENT_SECRET=************ (REDACTED)
 GITHUB_CALLBACK_URL=http://localhost:4000/api/auth/github/callback
 
 # Frontend
 FRONTEND_URL=http://localhost:3000
 
 # GitHub API
-GITHUB_TOKEN=ghp_REDACTED_TOKEN
+GITHUB_TOKEN=ghp_************ (REDACTED)
 
 # OpenRouter AI (for AI Reviews)
-LLM_API_KEY=sk-or-v1-REDACTED_KEY
+LLM_API_KEY=sk-or-v1-************ (REDACTED)
 LLM_BASE_URL=https://openrouter.ai/api/v1
 LLM_MODEL=gpt-4o-mini
 LLM_MAX_TOKENS=4096
