@@ -1,12 +1,7 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { ClerkProvider } from "@clerk/nextjs"
-import { ThemeProvider } from "@/components/theme-provider"
-import { GitHubConnectModal } from "@/components/auth/github-connect-modal"
-import { ClerkSignOutListener } from "@/components/auth/ClerkSignOutListener"
-import { Navbar } from "@/components/sections/navbar"
-import { Footer } from "@/components/sections/footer"
+import { ClientLayout } from "@/components/ClientLayout"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,23 +16,10 @@ export default function RootLayout({
     children: React.ReactNode
 }) {
     return (
-        <ClerkProvider afterSignOutUrl="/">
-            <html lang="en" suppressHydrationWarning>
-                <body className={inter.className}>
-                    <ClerkSignOutListener />
-                    <ThemeProvider
-                        attribute="class"
-                        defaultTheme="system"
-                        enableSystem
-                        disableTransitionOnChange
-                    >
-                        <GitHubConnectModal />
-                        <Navbar />
-                        {children}
-                        <Footer />
-                    </ThemeProvider>
-                </body>
-            </html>
-        </ClerkProvider>
+        <html lang="en" suppressHydrationWarning>
+            <body className={inter.className}>
+                <ClientLayout>{children}</ClientLayout>
+            </body>
+        </html>
     )
 }

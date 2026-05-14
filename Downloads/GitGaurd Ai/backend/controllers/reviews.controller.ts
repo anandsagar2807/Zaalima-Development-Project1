@@ -1,19 +1,70 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { fetchInsforgeReviews } from '../services/insforge.service';
+import { findUserById, decryptUserToken } from '../services/user.service';
+import { analyzeCodeWithAI } from '../services/ai-review.service';
 import { logger } from '../utils/logger';
 
 export async function getReviewsController(req: AuthRequest, res: Response) {
   try {
-    const { prId } = req.query;
+    const user = await findUserById(req.userId!);
 
-    // If prId is provided, fetch reviews for that specific PR
-    if (prId) {
-      const reviews = await fetchInsforgeReviews(prId as string);
-      return res.json({ reviews });
+    if (!user || !user.github_connected || !user.github_access_token) {
+      return res.status(400).json({ error: 'GitHub account not connected' });
     }
 
-    // Otherwise return all recent reviews (mock data)
+    const { prId, repo, prNumber } = req.query;
+
+    // If specific PR is requested, fetch and analyze it
+    if (repo && prNumber) {
+      const accessToken = decryptUserToken(user.github_access_token);
+
+      // Fetch PR details from GitHub
+      const prResponse = await fetch(
+        `https://api.github.com/repos/${repo}/pulls/${prNumber}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+
+      if (!prResponse.ok) {
+        throw new Error('Failed to fetch PR from GitHub');
+      }
+
+      const pr = await prResponse.json();
+
+      // Fetch PR diff
+      const diffResponse = await fetch(pr.diff_url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/vnd.github.v3.diff',
+        },
+      });
+
+      if (!diffResponse.ok) {
+        throw new Error('Failed to fetch PR diff');
+      }
+
+      const diff = await diffResponse.text();
+
+      // Analyze with AI (OpenRouter)
+      const aiAnalysis = await analyzeCodeWithAI(diff, pr.title);
+
+      return res.json({
+        reviews: aiAnalysis.reviews || [],
+        summary: aiAnalysis.summary,
+        prDetails: {
+          title: pr.title,
+          number: pr.number,
+          author: pr.user.login,
+          state: pr.state,
+        },
+      });
+    }
+
+    // Otherwise return mock recent reviews
     const allReviews = [
       {
         id: 'review-1',

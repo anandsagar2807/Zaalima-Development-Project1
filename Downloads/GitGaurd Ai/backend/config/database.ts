@@ -1,55 +1,33 @@
-import { Pool } from 'pg';
+import mongoose from 'mongoose';
 import { env } from './env';
 import { logger } from '../utils/logger';
 
-let pool: Pool | null = null;
-
 /**
- * Get or create the PostgreSQL connection pool.
- * Returns null if DATABASE_URL is not configured.
- */
-export function getPool(): Pool | null {
-  if (!env.databaseUrl) {
-    return null;
-  }
-
-  if (!pool) {
-    pool = new Pool({
-      connectionString: env.databaseUrl,
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    });
-
-    pool.on('error', (err) => {
-      logger.error('Unexpected PostgreSQL pool error', { error: err.message });
-    });
-
-    pool.on('connect', () => {
-      logger.info('PostgreSQL client connected to pool');
-    });
-  }
-
-  return pool;
-}
-
-/**
- * Connect to PostgreSQL and verify the connection.
+ * Connect to MongoDB using Mongoose.
  */
 export const connectDatabase = async (): Promise<void> => {
-  const p = getPool();
-
-  if (!p) {
-    logger.warn('DATABASE_URL not configured – running without database persistence');
+  if (!env.mongoUri) {
+    logger.warn('MONGO_URI not configured – running without database persistence');
     return;
   }
 
   try {
-    const client = await p.connect();
-    logger.info('PostgreSQL connected successfully');
-    client.release();
+    await mongoose.connect(env.mongoUri);
+    logger.info('MongoDB connected successfully');
+
+    mongoose.connection.on('error', (err) => {
+      logger.error('MongoDB connection error', { error: err.message });
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('MongoDB disconnected');
+    });
+
+    mongoose.connection.on('reconnected', () => {
+      logger.info('MongoDB reconnected');
+    });
   } catch (error) {
-    logger.error('Failed to connect to PostgreSQL', {
+    logger.error('Failed to connect to MongoDB', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
     throw error;
@@ -57,30 +35,16 @@ export const connectDatabase = async (): Promise<void> => {
 };
 
 /**
- * Disconnect from PostgreSQL gracefully.
+ * Disconnect from MongoDB gracefully.
  */
 export const disconnectDatabase = async (): Promise<void> => {
-  if (pool) {
-    try {
-      await pool.end();
-      pool = null;
-      logger.info('PostgreSQL disconnected successfully');
-    } catch (error) {
-      logger.error('Error disconnecting from PostgreSQL', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
-    }
+  try {
+    await mongoose.disconnect();
+    logger.info('MongoDB disconnected successfully');
+  } catch (error) {
+    logger.error('Error disconnecting from MongoDB', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
   }
 };
-
-/**
- * Get a guaranteed Pool (throws if DATABASE_URL is not configured).
- */
-export function requirePool(): Pool {
-  const p = getPool();
-  if (!p) {
-    throw new Error('DATABASE_URL is not configured');
-  }
-  return p;
-}

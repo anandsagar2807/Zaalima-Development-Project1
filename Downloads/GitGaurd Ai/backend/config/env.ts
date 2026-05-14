@@ -25,7 +25,7 @@ export const env = {
     port: toPositiveInteger(process.env.PORT, 4000),
     githubToken: process.env.GITHUB_TOKEN || "",
     githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || "",
-    databaseUrl: process.env.DATABASE_URL || "",
+    mongoUri: process.env.MONGO_URI || "",
 
     // GitHub OAuth (used by connect-github & connect-github-callback)
     githubClientId: process.env.GITHUB_CLIENT_ID || process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "",
