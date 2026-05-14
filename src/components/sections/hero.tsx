@@ -6,12 +6,19 @@ import { ArrowRight, Github, Sparkles, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/authStore";
+import { GithubAuthModal } from "@/components/auth/GithubAuthModal";
 
 const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL || "https://github.com";
 
 export function Hero() {
+    const { authenticated, connectGithub } = useAuthStore();
+
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32">
+            {/* GitHub Auth Modal */}
+            <GithubAuthModal />
+
             {/* Background Effects */}
             <div className="absolute inset-0 -z-10">
                 {/* Gradient Orbs */}
@@ -68,13 +75,26 @@ export function Hero() {
                         transition={{ duration: 0.5, delay: 0.3 }}
                         className="mt-10 flex flex-col sm:flex-row gap-4"
                     >
-                        <Link href="/dashboard">
-                            <Button variant="gradient" size="xl" className="group">
-                                <LayoutDashboard className="mr-2 h-5 w-5" />
-                                Open Dashboard
+                        {authenticated ? (
+                            <Link href="/dashboard">
+                                <Button variant="gradient" size="xl" className="group">
+                                    <LayoutDashboard className="mr-2 h-5 w-5" />
+                                    Open Dashboard
+                                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                </Button>
+                            </Link>
+                        ) : (
+                            <Button
+                                variant="gradient"
+                                size="xl"
+                                className="group"
+                                onClick={connectGithub}
+                            >
+                                <Github className="mr-2 h-5 w-5" />
+                                Connect GitHub
                                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                             </Button>
-                        </Link>
+                        )}
                         <a href={githubRepoUrl} target="_blank" rel="noreferrer">
                             <Button variant="outline" size="xl" className="group">
                                 <Github className="mr-2 h-5 w-5" />

@@ -75,7 +75,7 @@ export const useAuthStore = create<AuthState>()(
       checkSession: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/auth/me`, {
+          const response = await fetch(`${API_URL}/api/dashboard`, {
             credentials: 'include',
           });
 
@@ -94,14 +94,17 @@ export const useAuthStore = create<AuthState>()(
       },
 
       connectGithub: () => {
-        // Use Next.js API route (port 3000) so the redirect_uri matches the GitHub OAuth App callback
-        window.location.href = '/api/connect-github';
+        // Open GitHub OAuth authorize page in a new tab (do not navigate current tab)
+        const githubOAuthAuthorizeUrl =
+          "https://github.com/login/oauth/authorize?client_id=Ov23lieDJq9lEOP7aoZO&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fapi%2Fauth%2Fgithub%2Fcallback&scope=read%3Auser+user%3Aemail+repo+read%3Aorg&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aW1lc3RhbXAiOjE3Nzg3MjkyNDIyMjUsImlhdCI6MTc3ODcyOTI0MiwiZXhwIjoxNzc4NzI5ODQyfQ.qaoDo0BkZNVIoz7ZrJ89M_RMQzE7yN2mFtz5fZsLoSk";
+
+        window.open(githubOAuthAuthorizeUrl, "_blank", "noopener,noreferrer");
       },
 
       logout: async () => {
         try {
           // Call backend to clear server-side session/cookies
-          await fetch(`${API_URL}/api/auth/logout`, {
+          await fetch(`${API_URL}/api/sign-out`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -126,7 +129,7 @@ export const useAuthStore = create<AuthState>()(
 
       disconnectGithub: async () => {
         try {
-          const response = await fetch(`${API_URL}/api/github/disconnect`, {
+          const response = await fetch(`${API_URL}/api/settings`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -157,7 +160,7 @@ export const useAuthStore = create<AuthState>()(
       fetchGithubProfile: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/github/profile`, {
+          const response = await fetch(`${API_URL}/api/dashboard`, {
             credentials: 'include',
           });
 
@@ -178,7 +181,7 @@ export const useAuthStore = create<AuthState>()(
       syncGithubProfile: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/github/sync`, {
+          const response = await fetch(`${API_URL}/api/dashboard`, {
             method: 'POST',
             credentials: 'include',
           });

@@ -28,7 +28,7 @@ export const authMiddleware = async (
       return;
     }
 
-    const user = await findUserById(Number(payload.userId));
+    const user = await findUserById(payload.userId);
 
     if (!user) {
       res.status(401).json({ error: 'User not found' });
@@ -36,7 +36,7 @@ export const authMiddleware = async (
     }
 
     req.user = user;
-    req.userId = String(user.id);
+    req.userId = String(user._id);
     next();
   } catch (error) {
     logger.error('Authentication failed', { error: error instanceof Error ? error.message : 'Unknown error' });

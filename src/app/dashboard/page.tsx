@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, Suspense } from "react"
+import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { GitPullRequest, AlertTriangle, Shield, Zap, Clock, Wand2, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDashboardStore } from "@/store/dashboardStore"
+import { useAuthStore } from "@/store/authStore"
 import { toast } from "sonner"
 import {
     LineChart,
@@ -24,6 +26,7 @@ import {
 } from "recharts"
 
 import { containerVariants, itemVariants } from "@/lib/animations"
+import { GitHubConnectModal } from "@/components/auth/github-connect-modal"
 
 const statIcons = {
     totalPRs: GitPullRequest,
@@ -34,8 +37,19 @@ const statIcons = {
     autoFixes: Wand2,
 }
 
-export default function DashboardOverview() {
+function DashboardContent() {
+    return (
+        <>
+            <GitHubConnectModal />
+            <DashboardContentInner />
+        </>
+    )
+}
+
+function DashboardContentInner() {
+    const router = useRouter()
     const searchParams = useSearchParams()
+    const { authenticated, loading: authLoading, checkSession } = useAuthStore()
     const {
         analytics,
         prsPerDayData,
@@ -47,9 +61,18 @@ export default function DashboardOverview() {
         clearError,
     } = useDashboardStore()
 
+    // Redirect to homepage if not authenticated
     useEffect(() => {
-        fetchAnalytics()
-    }, [fetchAnalytics])
+        if (!authLoading && !authenticated) {
+            router.push("/")
+        }
+    }, [authenticated, authLoading, router])
+
+    useEffect(() => {
+        if (authenticated) {
+            fetchAnalytics()
+        }
+    }, [authenticated, fetchAnalytics])
 
     useEffect(() => {
         if (error) {
@@ -63,7 +86,10 @@ export default function DashboardOverview() {
         const githubConnected = searchParams?.get("github_connected")
         const githubLogin = searchParams?.get("github_login")
 
-        if (githubConnected === "1") {
+        if (githubConnected === "true") {
+            // Refresh session to get updated GitHub connection status
+            checkSession()
+
             const message = githubLogin
                 ? `GitHub account @${githubLogin} connected successfully!`
                 : "GitHub account connected successfully!"
@@ -75,7 +101,7 @@ export default function DashboardOverview() {
             url.searchParams.delete("github_login")
             window.history.replaceState({}, "", url.toString())
         }
-    }, [searchParams])
+    }, [searchParams, checkSession])
 
     // Auto-refresh analytics every 30 seconds
     useEffect(() => {
@@ -288,5 +314,17 @@ export default function DashboardOverview() {
                 <p>Data refreshes automatically every 30 seconds</p>
             </motion.div>
         </motion.div>
+    )
+}
+
+export default function DashboardOverview() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <DashboardContent />
+        </Suspense>
     )
 }
