@@ -1,8 +1,5 @@
-// Dashboard data service – aggregates data from PostgreSQL for the frontend dashboard.
-// Falls back to returning null when the database is not configured.
-
-import { Pool } from "pg"
-import { getPool } from "../config/database"
+// Dashboard data service – returns mock data since MongoDB migration is in progress.
+// TODO: Implement MongoDB queries for dashboard analytics
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -145,108 +142,25 @@ function perfSubType(t: string): DashboardPerformanceIssue["type"] {
 // ── Analytics ────────────────────────────────────────────────────────────────
 
 export async function getAnalytics(): Promise<DashboardAnalytics | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        const [prCount, reviewCount, secCount, perfCount, fixCount, avgTime] = await Promise.all([
-            p.query("SELECT COUNT(*)::int AS cnt FROM pull_requests"),
-            p.query("SELECT COUNT(*)::int AS cnt FROM reviews"),
-            p.query("SELECT COUNT(*)::int AS cnt FROM reviews WHERE issue_type = 'security'"),
-            p.query("SELECT COUNT(*)::int AS cnt FROM reviews WHERE issue_type = 'performance'"),
-            p.query("SELECT COUNT(*)::int AS cnt FROM reviews WHERE status = 'applied'"),
-            p.query(`
-                SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (reviewed_at - opened_at))), 0)::numeric(10,1) AS avg_sec
-                FROM pull_requests
-                WHERE reviewed_at IS NOT NULL AND opened_at IS NOT NULL
-            `),
-        ])
-
-        return {
-            totalPRs: prCount.rows[0]?.cnt ?? 0,
-            issuesDetected: reviewCount.rows[0]?.cnt ?? 0,
-            securityWarnings: secCount.rows[0]?.cnt ?? 0,
-            performanceWarnings: perfCount.rows[0]?.cnt ?? 0,
-            avgResponseTime: Number(avgTime.rows[0]?.avg_sec ?? 0),
-            autoFixes: fixCount.rows[0]?.cnt ?? 0,
-        }
-    } catch {
-        return null
-    }
+    // TODO: Implement MongoDB queries
+    return null;
 }
 
 // ── Chart data ───────────────────────────────────────────────────────────────
 
 export async function getPRsPerDayData(): Promise<PRsPerDayEntry[] | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        const result = await p.query(`
-            SELECT
-                TO_CHAR(DATE(created_at), 'Dy') AS day,
-                COUNT(DISTINCT pull_request_id)::int AS prs,
-                COUNT(*)::int AS issues
-            FROM reviews
-            WHERE created_at >= NOW() - INTERVAL '7 days'
-            GROUP BY DATE(created_at)
-            ORDER BY DATE(created_at)
-        `)
-        return result.rows.map((r) => ({
-            day: r.day,
-            prs: r.prs,
-            issues: r.issues,
-        }))
-    } catch {
-        return null
-    }
+    // TODO: Implement MongoDB queries
+    return null;
 }
 
 export async function getIssuesBySeverity(): Promise<SeverityEntry[] | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        const result = await p.query(`
-            SELECT severity, COUNT(*)::int AS value
-            FROM reviews
-            GROUP BY severity
-            ORDER BY ARRAY_POSITION(ARRAY['critical','high','medium','low'], severity)
-        `)
-        const colorMap: Record<string, string> = {
-            critical: "#ef4444",
-            high: "#f97316",
-            medium: "#eab308",
-            low: "#22c55e",
-        }
-        return result.rows.map((r) => ({
-            name: r.severity.charAt(0).toUpperCase() + r.severity.slice(1),
-            value: r.value,
-            color: colorMap[r.severity] ?? "#6b7280",
-        }))
-    } catch {
-        return null
-    }
+    // TODO: Implement MongoDB queries
+    return null;
 }
 
 export async function getSecurityVsBugData(): Promise<CategoryEntry[] | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        const result = await p.query(`
-            SELECT issue_type AS name, COUNT(*)::int AS value
-            FROM reviews
-            GROUP BY issue_type
-            ORDER BY value DESC
-        `)
-        return result.rows.map((r) => ({
-            name: r.name.charAt(0).toUpperCase() + r.name.slice(1),
-            value: r.value,
-        }))
-    } catch {
-        return null
-    }
+    // TODO: Implement MongoDB queries
+    return null;
 }
 
 // ── Pull Requests ────────────────────────────────────────────────────────────
@@ -256,72 +170,8 @@ export async function getPullRequests(filters?: {
     type?: string
     autofix?: boolean
 }): Promise<DashboardPullRequest[] | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        let sql = `
-            SELECT
-                pr.id,
-                pr.title,
-                pr.state,
-                pr.branch,
-                pr.author,
-                pr.reviewed_at,
-                pr.html_url,
-                r.name AS repo_name,
-                COALESCE(issues.cnt, 0)::int AS issues_found,
-                COALESCE(issues.has_fix, FALSE) AS has_auto_fix,
-                COALESCE(issues.worst_sev, 'low') AS worst_severity,
-                COALESCE(issues.main_type, 'bug') AS main_type
-            FROM pull_requests pr
-            JOIN repositories r ON r.id = pr.repository_id
-            LEFT JOIN LATERAL (
-                SELECT
-                    COUNT(*)::int AS cnt,
-                    BOOL_OR(status = 'applied') AS has_fix,
-                    MIN(array_position(ARRAY['critical','high','medium','low'], severity)) AS sev_rank,
-                    CASE WHEN MIN(array_position(ARRAY['critical','high','medium','low'], severity)) = 0 THEN 'critical'
-                         WHEN MIN(array_position(ARRAY['critical','high','medium','low'], severity)) = 1 THEN 'high'
-                         WHEN MIN(array_position(ARRAY['critical','high','medium','low'], severity)) = 2 THEN 'medium'
-                         ELSE 'low' END AS worst_sev,
-                    MODE() WITHIN GROUP (ORDER BY issue_type) AS main_type
-                FROM reviews rv WHERE rv.pull_request_id = pr.id
-            ) issues ON TRUE
-            WHERE 1=1
-        `
-        const params: unknown[] = []
-        let paramIdx = 1
-
-        if (filters?.severity) {
-            sql += ` AND issues.worst_sev = $${paramIdx++}`
-            params.push(filters.severity)
-        }
-        if (filters?.type) {
-            sql += ` AND issues.main_type = $${paramIdx++}`
-            params.push(filters.type)
-        }
-
-        sql += ` ORDER BY pr.reviewed_at DESC NULLS LAST, pr.opened_at DESC LIMIT 100`
-
-        const result = await p.query(sql, params)
-
-        return result.rows.map((row) => ({
-            id: String(row.id),
-            title: row.title,
-            repository: row.repo_name,
-            status: row.state === "open" ? "open" : row.state === "closed" ? "closed" : (row.state as "open" | "merged" | "closed" | "pending"),
-            issuesFound: row.issues_found,
-            severity: row.worst_severity,
-            reviewedAt: row.reviewed_at ? toRelativeTime(row.reviewed_at) : "Not reviewed",
-            author: row.author ?? "unknown",
-            branch: row.branch ?? "",
-            hasAutoFix: row.has_auto_fix,
-            type: issueTypeToCategory(row.main_type),
-        }))
-    } catch {
-        return null
-    }
+    // TODO: Implement MongoDB queries
+    return null;
 }
 
 // ── Security Issues ──────────────────────────────────────────────────────────
@@ -330,120 +180,23 @@ export async function getSecurityIssues(filters?: {
     severity?: string
     repo?: string
 }): Promise<DashboardSecurityIssue[] | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        let sql = `
-            SELECT
-                rv.id,
-                rv.issue_type,
-                rv.severity,
-                rv.title,
-                rv.description,
-                rv.status,
-                rv.created_at,
-                r.name AS repo_name,
-                pr.github_pull_number
-            FROM reviews rv
-            JOIN pull_requests pr ON pr.id = rv.pull_request_id
-            JOIN repositories r ON r.id = pr.repository_id
-            WHERE rv.issue_type = 'security'
-        `
-        const params: unknown[] = []
-        let paramIdx = 1
-
-        if (filters?.severity) {
-            sql += ` AND rv.severity = $${paramIdx++}`
-            params.push(filters.severity)
-        }
-        if (filters?.repo) {
-            sql += ` AND r.name = $${paramIdx++}`
-            params.push(filters.repo)
-        }
-
-        sql += ` ORDER BY rv.created_at DESC LIMIT 100`
-
-        const result = await p.query(sql, params)
-
-        return result.rows.map((row) => ({
-            id: String(row.id),
-            type: securitySubType(row.issue_type),
-            severity: row.severity,
-            title: row.title ?? `${row.issue_type} issue detected`,
-            description: row.description,
-            repository: row.repo_name,
-            prNumber: `#${row.github_pull_number}`,
-            detectedAt: toRelativeTime(row.created_at),
-            status: row.status === "applied" ? "fixed" : (row.status as "open" | "fixed" | "ignored"),
-        }))
-    } catch {
-        return null
-    }
+    // TODO: Implement MongoDB queries
+    return null;
 }
 
 export async function updateSecurityIssueStatus(
     id: string,
     status: "fixed" | "ignored"
 ): Promise<boolean> {
-    const p = getPool()
-    if (!p) return false
-
-    try {
-        const reviewStatus = status === "fixed" ? "applied" : "dismissed"
-        await p.query(`UPDATE reviews SET status = $1, updated_at = NOW() WHERE id = $2`, [
-            reviewStatus,
-            Number(id),
-        ])
-        return true
-    } catch {
-        return false
-    }
+    // TODO: Implement MongoDB queries
+    return false;
 }
 
 // ── Performance Issues ───────────────────────────────────────────────────────
 
 export async function getPerformanceIssues(): Promise<DashboardPerformanceIssue[] | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        const result = await p.query(`
-            SELECT
-                rv.id,
-                rv.issue_type,
-                rv.severity,
-                rv.title,
-                rv.description,
-                rv.created_at,
-                r.name AS repo_name,
-                pr.github_pull_number
-            FROM reviews rv
-            JOIN pull_requests pr ON pr.id = rv.pull_request_id
-            JOIN repositories r ON r.id = pr.repository_id
-            WHERE rv.issue_type = 'performance'
-            ORDER BY rv.created_at DESC
-            LIMIT 100
-        `)
-
-        return result.rows.map((row) => ({
-            id: String(row.id),
-            type: perfSubType(row.issue_type),
-            title: row.title ?? `${row.issue_type} issue detected`,
-            description: row.description,
-            repository: row.repo_name,
-            prNumber: `#${row.github_pull_number}`,
-            impact: (row.severity === "critical" || row.severity === "high"
-                ? "high"
-                : row.severity === "medium"
-                    ? "medium"
-                    : "low") as "high" | "medium" | "low",
-            performanceScore: Math.max(0, 100 - (SEVERITY_ORDER[row.severity] ?? 2) * 20),
-            detectedAt: toRelativeTime(row.created_at),
-        }))
-    } catch {
-        return null
-    }
+    // TODO: Implement MongoDB queries
+    return null;
 }
 
 // ── Webhook Logs ─────────────────────────────────────────────────────────────
@@ -451,50 +204,8 @@ export async function getPerformanceIssues(): Promise<DashboardPerformanceIssue[
 export async function getWebhookLogs(filters?: {
     status?: string
 }): Promise<DashboardWebhookLog[] | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        let sql = `
-            SELECT
-                l.id,
-                l.event,
-                l.status,
-                l.message,
-                l.duration_ms,
-                l.created_at,
-                r.name AS repo_name,
-                pr.github_pull_number
-            FROM logs l
-            LEFT JOIN repositories r ON r.id = l.repository_id
-            LEFT JOIN pull_requests pr ON pr.id = l.pull_request_id
-            WHERE 1=1
-        `
-        const params: unknown[] = []
-        let paramIdx = 1
-
-        if (filters?.status) {
-            sql += ` AND l.status = $${paramIdx++}`
-            params.push(filters.status)
-        }
-
-        sql += ` ORDER BY l.created_at DESC LIMIT 50`
-
-        const result = await p.query(sql, params)
-
-        return result.rows.map((row) => ({
-            id: String(row.id),
-            event: row.event ?? "pull_request.opened",
-            status: (row.status ?? "success") as "success" | "pending" | "failed",
-            repository: row.repo_name ?? "unknown",
-            prNumber: row.github_pull_number ? `#${row.github_pull_number}` : "#0",
-            timestamp: toRelativeTime(row.created_at),
-            duration: row.duration_ms ? `${(row.duration_ms / 1000).toFixed(1)}s` : "-",
-            details: row.message ?? "",
-        }))
-    } catch {
-        return null
-    }
+    // TODO: Implement MongoDB queries
+    return null;
 }
 
 // ── Rules ────────────────────────────────────────────────────────────────────
@@ -510,33 +221,13 @@ const DEFAULT_RULES: DashboardRule[] = [
 ]
 
 export async function getRules(): Promise<DashboardRule[] | null> {
-    const p = getPool()
-    if (!p) return null
-
-    try {
-        const result = await p.query(`SELECT rules FROM settings WHERE user_id = 0 LIMIT 1`)
-        if (result.rows.length > 0 && Array.isArray(result.rows[0].rules)) {
-            return result.rows[0].rules as DashboardRule[]
-        }
-        return DEFAULT_RULES
-    } catch {
-        return DEFAULT_RULES
-    }
+    // TODO: Implement MongoDB queries
+    return DEFAULT_RULES;
 }
 
 export async function updateRules(rules: DashboardRule[]): Promise<boolean> {
-    const p = getPool()
-    if (!p) return false
-
-    try {
-        await p.query(
-            `UPDATE settings SET rules = $1::jsonb, updated_at = NOW() WHERE user_id = 0`,
-            [JSON.stringify(rules)]
-        )
-        return true
-    } catch {
-        return false
-    }
+    // TODO: Implement MongoDB queries
+    return false;
 }
 
 // ── Repository toggles ──────────────────────────────────────────────────────
@@ -545,37 +236,13 @@ export async function toggleRepositoryField(
     repoId: string,
     field: "status" | "strict_mode" | "security_scan" | "ignore_styling" | "auto_fix"
 ): Promise<boolean> {
-    const p = getPool()
-    if (!p) return false
-
-    try {
-        if (field === "status") {
-            await p.query(
-                `UPDATE repositories SET status = CASE WHEN status = 'active' THEN 'paused' ELSE 'active' END, updated_at = NOW() WHERE id = $1`,
-                [Number(repoId)]
-            )
-        } else {
-            await p.query(
-                `UPDATE repositories SET ${field} = NOT ${field}, updated_at = NOW() WHERE id = $1`,
-                [Number(repoId)]
-            )
-        }
-        return true
-    } catch {
-        return false
-    }
+    // TODO: Implement MongoDB queries
+    return false;
 }
 
 export async function enableAllRepositories(): Promise<boolean> {
-    const p = getPool()
-    if (!p) return false
-
-    try {
-        await p.query(`UPDATE repositories SET status = 'active', updated_at = NOW()`)
-        return true
-    } catch {
-        return false
-    }
+    // TODO: Implement MongoDB queries
+    return false;
 }
 
 // ── Dashboard Summary ────────────────────────────────────────────────────────
@@ -698,48 +365,7 @@ function getMockDashboardSummary(): DashboardSummary {
     }
 }
 
-export async function getDashboardSummary(userId: number): Promise<DashboardSummary> {
-    const p = getPool()
-
-    // If no database connection, return mock data
-    if (!p) {
-        return getMockDashboardSummary()
-    }
-
-    try {
-        // Fetch all data in parallel
-        const [analytics, pullRequests, securityIssues, performanceIssues, webhookLogs, rules, prsPerDay, issuesBySeverity, securityVsBug] = await Promise.all([
-            getAnalytics(),
-            getPullRequests(),
-            getSecurityIssues(),
-            getPerformanceIssues(),
-            getWebhookLogs(),
-            getRules(),
-            getPRsPerDayData(),
-            getIssuesBySeverity(),
-            getSecurityVsBugData(),
-        ])
-
-        // If any critical data is null, fall back to mock data
-        if (!analytics || !pullRequests) {
-            return getMockDashboardSummary()
-        }
-
-        return {
-            analytics,
-            pullRequests,
-            securityIssues: securityIssues || [],
-            performanceIssues: performanceIssues || [],
-            webhookLogs: webhookLogs || [],
-            rules: rules || DEFAULT_RULES,
-            chartData: {
-                prsPerDay: prsPerDay || [],
-                issuesBySeverity: issuesBySeverity || [],
-                securityVsBug: securityVsBug || [],
-            },
-        }
-    } catch (error) {
-        // On any error, return mock data
-        return getMockDashboardSummary()
-    }
+export async function getDashboardSummary(userId: string | number): Promise<DashboardSummary> {
+    // Return mock data since MongoDB migration is in progress
+    return getMockDashboardSummary();
 }

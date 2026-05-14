@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { CheckCircle2, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export default function GithubConnectedPage() {
+function GithubConnectedContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const githubLogin = searchParams?.get("github_login") ?? null
@@ -42,5 +42,17 @@ export default function GithubConnectedPage() {
                 </div>
             </div>
         </main>
+    )
+}
+
+export default function GithubConnectedPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <GithubConnectedContent />
+        </Suspense>
     )
 }

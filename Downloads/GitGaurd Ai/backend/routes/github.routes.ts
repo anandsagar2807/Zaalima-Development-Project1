@@ -30,7 +30,7 @@ router.get('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
     if (!response.ok) {
       if (response.status === 401) {
         // Token expired or revoked
-        await disconnectUserGitHub(user.id);
+        await disconnectUserGitHub(String(user._id));
         return res.status(401).json({ error: 'GitHub token expired. Please reconnect.' });
       }
       throw new Error('Failed to fetch GitHub profile');
@@ -39,7 +39,7 @@ router.get('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
     const githubProfile = await response.json();
 
     // Update user data with fresh info
-    await updateUserGitHub(user.id, {
+    await updateUserGitHub(String(user._id), {
       githubPublicRepos: githubProfile.public_repos || 0,
       githubFollowers: githubProfile.followers || 0,
       githubFollowing: githubProfile.following || 0,
@@ -94,7 +94,7 @@ router.get('/repos', authMiddleware, async (req: AuthRequest, res: Response) => 
 
     if (!response.ok) {
       if (response.status === 401) {
-        await disconnectUserGitHub(user.id);
+        await disconnectUserGitHub(String(user._id));
         return res.status(401).json({ error: 'GitHub token expired. Please reconnect.' });
       }
       throw new Error('Failed to fetch repositories');
@@ -160,16 +160,16 @@ router.post('/disconnect', authMiddleware, async (req: AuthRequest, res: Respons
     }
 
     // Clear GitHub data
-    await disconnectUserGitHub(user.id);
+    await disconnectUserGitHub(String(user._id));
 
     await createLog({
-      userId: user.id,
+      userId: String(user._id),
       level: 'info',
       event: 'github_disconnect',
       message: 'GitHub account disconnected',
     });
 
-    logger.info('GitHub account disconnected', { userId: user.id });
+    logger.info('GitHub account disconnected', { userId: String(user._id) });
 
     res.json({ message: 'GitHub account disconnected successfully' });
   } catch (error) {
@@ -201,7 +201,7 @@ router.post('/sync', authMiddleware, async (req: AuthRequest, res: Response) => 
 
     if (!response.ok) {
       if (response.status === 401) {
-        await disconnectUserGitHub(user.id);
+        await disconnectUserGitHub(String(user._id));
         return res.status(401).json({ error: 'GitHub token expired. Please reconnect.' });
       }
       throw new Error('Failed to sync GitHub profile');
@@ -209,7 +209,7 @@ router.post('/sync', authMiddleware, async (req: AuthRequest, res: Response) => 
 
     const githubProfile = await response.json();
 
-    await updateUserGitHub(user.id, {
+    await updateUserGitHub(String(user._id), {
       githubUsername: githubProfile.login,
       githubAvatar: githubProfile.avatar_url,
       githubPublicRepos: githubProfile.public_repos || 0,
@@ -219,7 +219,7 @@ router.post('/sync', authMiddleware, async (req: AuthRequest, res: Response) => 
     });
 
     await createLog({
-      userId: user.id,
+      userId: String(user._id),
       level: 'info',
       event: 'github_sync',
       message: 'GitHub profile synced',

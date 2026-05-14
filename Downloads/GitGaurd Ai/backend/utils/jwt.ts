@@ -1,35 +1,37 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 
-const JWT_SECRET = env.jwtSecret;
-const JWT_EXPIRES_IN = '7d';
-
-export interface JWTPayload {
+export interface TokenPayload {
   userId: string;
   email: string;
 }
 
-export const generateToken = (payload: JWTPayload): string => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-};
+export function generateToken(payload: TokenPayload): string {
+  return jwt.sign(payload, env.jwtSecret, {
+    expiresIn: '7d',
+  });
+}
 
-export const verifyToken = (token: string): JWTPayload | null => {
+export function generateStateToken(): string {
+  return jwt.sign({ timestamp: Date.now() }, env.jwtSecret, {
+    expiresIn: '10m',
+  });
+}
+
+export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, env.jwtSecret) as TokenPayload;
+    return decoded;
   } catch (error) {
     return null;
   }
-};
+}
 
-export const generateStateToken = (): string => {
-  return jwt.sign({ timestamp: Date.now() }, JWT_SECRET, { expiresIn: '10m' });
-};
-
-export const verifyStateToken = (state: string): boolean => {
+export function verifyStateToken(token: string): boolean {
   try {
-    jwt.verify(state, JWT_SECRET);
+    jwt.verify(token, env.jwtSecret);
     return true;
   } catch (error) {
     return false;
   }
-};
+}

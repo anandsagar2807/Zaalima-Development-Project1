@@ -19,8 +19,8 @@ function App() {
     <BrowserRouter>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        enableSystem
+        defaultTheme="dark"
+        enableSystem={false}
         disableTransitionOnChange
       >
         <AuthProvider>
