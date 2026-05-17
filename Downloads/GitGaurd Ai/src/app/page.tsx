@@ -19,7 +19,7 @@ export default function Home() {
   }, [])
 
   const handleConnect = () => {
-    // Open OAuth/authorize in a new tab, then close popup.
+    // Open connect-github in a new tab so the landing page stays open
     setShowPopup(false)
     if (typeof window !== "undefined") {
       window.open("/connect-github", "_blank", "noopener,noreferrer")

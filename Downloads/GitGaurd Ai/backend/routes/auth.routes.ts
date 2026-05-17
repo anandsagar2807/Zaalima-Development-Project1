@@ -227,7 +227,12 @@ router.get('/github/callback', async (req: Request, res: Response) => {
     });
 
     // Redirect to dashboard with success
-    res.redirect(`${FRONTEND_URL}/dashboard?github_connected=true`);
+    const redirectUrl = new URL(`${FRONTEND_URL}/dashboard`);
+    redirectUrl.searchParams.set("github_connected", "true");
+    if (githubUser.login) {
+      redirectUrl.searchParams.set("github_login", githubUser.login);
+    }
+    res.redirect(redirectUrl.toString());
   } catch (error) {
     logger.error('GitHub OAuth callback error', { error });
     res.redirect(`${FRONTEND_URL}/dashboard/integrations?error=callback_failed`);

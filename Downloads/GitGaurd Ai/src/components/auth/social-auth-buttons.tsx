@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useSignIn } from "@clerk/nextjs"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 
 interface SocialAuthButtonsProps {
@@ -12,6 +13,7 @@ interface SocialAuthButtonsProps {
 
 export function SocialAuthButtons({ className = "", size = "default", fullWidth = false }: SocialAuthButtonsProps) {
     const { isLoaded, signIn } = useSignIn()
+    const pathname = usePathname()
     const [loadingProvider, setLoadingProvider] = useState<"google" | "github" | null>(null)
 
     const signInWith = async (provider: "google" | "github") => {
@@ -19,7 +21,13 @@ export function SocialAuthButtons({ className = "", size = "default", fullWidth 
 
         // GitHub CTA intentionally bypasses Clerk OAuth and goes straight to GitHub auth flow.
         if (provider === "github") {
-            window.open("/api/connect-github", "_blank", "noopener,noreferrer")
+            // From the home page, open in a new tab so the landing page stays open.
+            // From any other page (sign-in, connect-github, etc.), stay in the same tab.
+            if (pathname === "/") {
+                window.open("/api/connect-github", "_blank", "noopener,noreferrer")
+            } else {
+                window.location.href = "/api/connect-github"
+            }
             return
         }
 

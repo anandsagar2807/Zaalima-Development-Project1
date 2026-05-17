@@ -86,7 +86,7 @@ function DashboardContentInner() {
         const githubConnected = searchParams?.get("github_connected")
         const githubLogin = searchParams?.get("github_login")
 
-        if (githubConnected === "true") {
+        if (githubConnected === "true" || githubConnected === "1") {
             // Refresh session to get updated GitHub connection status
             checkSession()
 
