@@ -23,7 +23,10 @@ export function GithubAuthModal() {
 
   const handleAuthorize = () => {
     setIsOpen(false);
-    connectGithub();
+    // On the home page, open connect-github in a new tab so the landing page stays open
+    if (typeof window !== "undefined") {
+      window.open("/connect-github", "_blank", "noopener,noreferrer");
+    }
   };
 
   const handleCancel = () => {

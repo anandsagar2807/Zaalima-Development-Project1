@@ -88,7 +88,11 @@ export function Hero() {
                                 variant="gradient"
                                 size="xl"
                                 className="group"
-                                onClick={connectGithub}
+                                onClick={() => {
+                                    if (typeof window !== "undefined") {
+                                        window.open("/connect-github", "_blank", "noopener,noreferrer")
+                                    }
+                                }}
                             >
                                 <Github className="mr-2 h-5 w-5" />
                                 Connect GitHub
