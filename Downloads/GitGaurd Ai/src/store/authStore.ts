@@ -94,11 +94,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       connectGithub: () => {
-        // Open GitHub OAuth authorize page in a new tab (do not navigate current tab)
-        const githubOAuthAuthorizeUrl =
-          "https://github.com/login/oauth/authorize?client_id=Ov23lieDJq9lEOP7aoZO&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fapi%2Fauth%2Fgithub%2Fcallback&scope=read%3Auser+user%3Aemail+repo+read%3Aorg&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aW1lc3RhbXAiOjE3Nzg3MjkyNDIyMjUsImlhdCI6MTc3ODcyOTI0MiwiZXhwIjoxNzc4NzI5ODQyfQ.qaoDo0BkZNVIoz7ZrJ89M_RMQzE7yN2mFtz5fZsLoSk";
-
-        window.open(githubOAuthAuthorizeUrl, "_blank", "noopener,noreferrer");
+        // Redirect the current tab to the backend GitHub OAuth flow
+        // The backend handles state generation, cookie setting, and GitHub redirect
+        window.location.href = "/api/connect-github";
       },
 
       logout: async () => {
@@ -205,8 +203,18 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         authenticated: state.authenticated,
-        githubConnected: state.githubConnected,
+        githubConnected: state.authenticated ? state.githubConnected : false,
       }),
+      merge: (persisted: unknown, current: AuthState): AuthState => {
+        const stored = persisted as Partial<AuthState>
+        // Never trust localStorage for githubConnected — the server (checkSession)
+        // is the sole source of truth. Default to false on every hydration.
+        return {
+          ...current,
+          ...stored,
+          githubConnected: false,
+        }
+      },
     }
   )
 );

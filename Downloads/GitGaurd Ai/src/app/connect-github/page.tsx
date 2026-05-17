@@ -87,7 +87,7 @@ function ConnectGithubContent() {
                         <Link href="/dashboard">
                             <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
                         </Link>
-                        <AuthorizeGithubButton size="lg" className="w-full sm:w-auto" />
+                        <AuthorizeGithubButton size="lg" forceAuthorize className="w-full sm:w-auto" />
                     </div>
                 </div>
             </div>

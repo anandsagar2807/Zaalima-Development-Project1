@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Github, Loader2 } from 'lucide-react';
+import { Github, Loader2, ExternalLink } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { cn } from '../lib/utils';
 
@@ -7,12 +7,18 @@ interface AuthorizeGithubButtonProps {
   className?: string;
   variant?: 'default' | 'outline';
   size?: 'sm' | 'md' | 'lg';
+  /** Always show "Authorize GitHub" label, even if GitHub is connected */
+  forceAuthorize?: boolean;
+  /** If true, clicking will open the GitHub OAuth flow directly (skips connect-github page) */
+  skipConnectPage?: boolean;
 }
 
 export default function AuthorizeGithubButton({
   className,
   variant = 'default',
   size = 'md',
+  forceAuthorize = false,
+  skipConnectPage = false,
 }: AuthorizeGithubButtonProps) {
   const { githubConnected, connectGithub } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +27,9 @@ export default function AuthorizeGithubButton({
     setIsLoading(true);
     connectGithub();
   };
+
+  const showConnected = githubConnected && !forceAuthorize;
+  const showDisabled = showConnected || isLoading;
 
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-sm',
@@ -38,7 +47,7 @@ export default function AuthorizeGithubButton({
   return (
     <button
       onClick={handleConnect}
-      disabled={githubConnected || isLoading}
+      disabled={showDisabled}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200',
         'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -51,11 +60,13 @@ export default function AuthorizeGithubButton({
     >
       {isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin" />
-      ) : (
+      ) : showConnected ? (
         <Github className="w-5 h-5" />
+      ) : (
+        <ExternalLink className="w-5 h-5" />
       )}
       <span>
-        {githubConnected
+        {showConnected
           ? 'GitHub Connected'
           : isLoading
           ? 'Connecting...'
