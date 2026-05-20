@@ -43,7 +43,9 @@ export async function handleGithubConnectCallback(request: Request) {
 
     const clientId = process.env.GITHUB_CLIENT_ID || process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
     const clientSecret = process.env.GITHUB_CLIENT_SECRET
-    const redirectUri = process.env.GITHUB_OAUTH_REDIRECT_URI || `${url.origin}/api/connect-github/callback`
+    // Always compute from the request origin — must match exactly what was sent
+    // in the authorize redirect_uri, otherwise GitHub rejects the token exchange.
+    const redirectUri = `${url.origin}/api/connect-github/callback`
 
     if (!clientId || !clientSecret) {
         return redirectToConnect(request.url, "missing_oauth_config")
