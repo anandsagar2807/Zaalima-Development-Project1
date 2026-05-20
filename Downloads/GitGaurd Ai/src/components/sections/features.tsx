@@ -89,7 +89,7 @@ const itemVariants = {
 
 export function Features() {
     return (
-        <section id="features" className="py-24 relative overflow-hidden">
+        <section id="features" className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
             {/* Background */}
             <div className="absolute inset-0 -z-10">
                 <div className="absolute top-0 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
@@ -105,10 +105,10 @@ export function Features() {
                     transition={{ duration: 0.5 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold">
                         <span className="gradient-text">Powerful Features</span>
                     </h2>
-                    <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+                    <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                         Everything you need to automate your code review process and maintain code quality at scale.
                     </p>
                 </motion.div>
@@ -119,19 +119,19 @@ export function Features() {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true }}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
                 >
                     {features.map((feature) => (
                         <motion.div key={feature.title} variants={itemVariants}>
                             <Card className="h-full hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-transparent hover:border-primary/20 group">
-                                <CardHeader>
-                                    <div className={`inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br ${feature.gradient} text-white shadow-lg mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                                        <feature.icon className="h-6 w-6" />
+                                <CardHeader className="pb-3">
+                                    <div className={`inline-flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-gradient-to-br ${feature.gradient} text-white shadow-lg mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                                        <feature.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                                     </div>
-                                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                                    <CardTitle className="text-lg sm:text-xl">{feature.title}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <CardDescription className="text-sm leading-relaxed">
+                                    <CardDescription className="text-xs sm:text-sm leading-relaxed">
                                         {feature.description}
                                     </CardDescription>
                                 </CardContent>
