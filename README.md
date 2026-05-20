@@ -67,7 +67,7 @@ The Resume Builder is an AI-powered application that generates and optimizes res
 
 ---
 
- # GitGuard AI – Week 3 Roadmap
+ # GitGuard AI – Week 3 
 
 GitGuard AI is an intelligent, AI-powered code review companion designed to automate pull request analysis, improve code quality, and help engineering teams move faster and safer.
 
