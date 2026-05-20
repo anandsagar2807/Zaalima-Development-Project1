@@ -24,8 +24,8 @@ router.get('/github', (req: Request, res: Response) => {
     // Generate state token for CSRF protection
     const state = generateStateToken();
 
-    // Store state in cookie
-    res.cookie('github_oauth_state', state, {
+    // Store state in cookie (must match what Next.js callback reads)
+    res.cookie('gitguard_github_oauth_state', state, {
       httpOnly: true,
       secure: env.nodeEnv === 'production',
       sameSite: 'lax',
@@ -54,7 +54,7 @@ router.get('/github', (req: Request, res: Response) => {
 router.get('/github/callback', async (req: Request, res: Response) => {
   try {
     const { code, state } = req.query;
-    const storedState = req.cookies?.github_oauth_state;
+    const storedState = req.cookies?.gitguard_github_oauth_state;
 
     // Validate state parameter (CSRF protection)
     if (!state || !storedState || state !== storedState || !verifyStateToken(state as string)) {
@@ -63,7 +63,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
     }
 
     // Clear state cookie
-    res.clearCookie('github_oauth_state');
+    res.clearCookie('gitguard_github_oauth_state');
 
     if (!code) {
       logger.warn('No authorization code received');
@@ -281,7 +281,7 @@ router.post('/logout', async (req: AuthRequest, res: Response) => {
     res.clearCookie('token', { path: '/' });
 
     // 2. Clear GitHub OAuth state cookie
-    res.clearCookie('github_oauth_state', { path: '/' });
+    res.clearCookie('gitguard_github_oauth_state', { path: '/' });
 
     // 3. Clear all GitGuard custom cookies
     res.clearCookie('gitguard_github_connected', { path: '/' });
