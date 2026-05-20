@@ -15,9 +15,10 @@ export async function handleConnectGithub(request: Request) {
     // state cookie is readable by the callback handler (same origin).
     const state = crypto.randomBytes(32).toString("hex")
 
-    // The callback URL — must point to the Next.js callback route.
-    const redirectUri = process.env.GITHUB_OAUTH_REDIRECT_URI ||
-        new URL("/api/connect-github/callback", request.url).toString()
+    // Always compute the callback URL from the request origin — never rely on
+    // env vars that may be stale or gitignored. This guarantees redirect_uri
+    // matches what GitHub OAuth App expects and avoids cross-origin errors.
+    const redirectUri = new URL("/api/connect-github/callback", request.url).toString()
 
     // GitHub OAuth scopes
     const scope = ["read:user", "user:email", "repo", "read:org"].join(" ")
