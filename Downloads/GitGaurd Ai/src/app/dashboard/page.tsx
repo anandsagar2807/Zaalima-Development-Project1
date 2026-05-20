@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
+import { useUser } from "@clerk/nextjs"
 import { motion } from "framer-motion"
 import { GitPullRequest, AlertTriangle, Shield, Zap, Clock, Wand2, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -49,7 +50,8 @@ function DashboardContent() {
 function DashboardContentInner() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { authenticated, loading: authLoading, checkSession } = useAuthStore()
+    const { isLoaded: clerkLoaded, isSignedIn, user: clerkUser } = useUser()
+    const { loading: authLoading, checkSession } = useAuthStore()
     const {
         analytics,
         prsPerDayData,
@@ -61,18 +63,25 @@ function DashboardContentInner() {
         clearError,
     } = useDashboardStore()
 
-    // Redirect to homepage if not authenticated
+    // Redirect to homepage if not authenticated (use Clerk for auth status)
     useEffect(() => {
-        if (!authLoading && !authenticated) {
+        if (clerkLoaded && !isSignedIn) {
             router.push("/")
         }
-    }, [authenticated, authLoading, router])
+    }, [clerkLoaded, isSignedIn, router])
+
+    // Once Clerk confirms auth, also sync auth store for backward compat
+    useEffect(() => {
+        if (clerkLoaded && isSignedIn && clerkUser) {
+            checkSession()
+        }
+    }, [clerkLoaded, isSignedIn, clerkUser, checkSession])
 
     useEffect(() => {
-        if (authenticated) {
+        if (isSignedIn) {
             fetchAnalytics()
         }
-    }, [authenticated, fetchAnalytics])
+    }, [isSignedIn, fetchAnalytics])
 
     useEffect(() => {
         if (error) {
@@ -102,6 +111,15 @@ function DashboardContentInner() {
             window.history.replaceState({}, "", url.toString())
         }
     }, [searchParams, checkSession])
+
+    // Show loading state while Clerk initializes
+    if (!clerkLoaded || (authLoading && !isSignedIn)) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        )
+    }
 
     // Auto-refresh analytics every 30 seconds
     useEffect(() => {
