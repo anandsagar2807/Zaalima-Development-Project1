@@ -26,20 +26,21 @@ export function Navbar() {
   const { isSignedIn, signOut, user } = useAuth()
   const isDashboardRoute = location.pathname?.startsWith('/dashboard')
   const activeNavItems = isDashboardRoute ? dashboardNavItems : navItems
+  const isHomePage = !isDashboardRoute
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-md">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-3 h-16 items-center">
-          <Link to="/" className="flex items-center space-x-2 justify-self-start">
-            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg shadow-lg ring-1 ring-border/60">
+        <div className="flex items-center justify-between h-14 sm:h-16">
+          <Link to="/" className="flex items-center space-x-2 shrink-0">
+            <div className="relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center overflow-hidden rounded-lg shadow-lg ring-1 ring-border/60">
               <img
                 src="/owl-logo.png"
                 alt="GitGuard owl logo"
-                className="h-10 w-10 object-cover"
+                className="h-8 w-8 sm:h-10 sm:w-10 object-cover"
               />
             </div>
-            <span className="hidden sm:block text-xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
+            <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
               GitGuard AI
             </span>
           </Link>
@@ -56,18 +57,18 @@ export function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3 justify-self-end">
+          <div className="flex items-center gap-1 sm:gap-3">
             <ThemeToggle />
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 sm:gap-3">
               {isSignedIn ? (
                 <>
                   <Link to="/dashboard">
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                      <LayoutDashboard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       Dashboard
                     </Button>
                   </Link>
-                  <Button variant="ghost" size="sm" onClick={signOut}>
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm" onClick={signOut}>
                     Sign Out
                   </Button>
                 </>
@@ -77,7 +78,7 @@ export function Navbar() {
                 </>
               )}
             </div>
-            <button className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)}>
+            <button className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
