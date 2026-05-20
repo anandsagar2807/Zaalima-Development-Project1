@@ -43,8 +43,8 @@ const socialLinks = [
 export function Footer() {
     return (
         <footer className="border-t bg-card">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-16">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 sm:gap-8">
                     {/* Brand */}
                     <div className="col-span-2">
                         <Link href="/" className="flex items-center space-x-2 mb-4">
@@ -57,9 +57,9 @@ export function Footer() {
                                     className="h-10 w-10 object-cover"
                                 />
                             </div>
-                            <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-sm">GitGuard AI</span>
+                            <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-sm">GitGuard AI</span>
                         </Link>
-                        <p className="text-sm text-muted-foreground mb-4 max-w-xs">
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-4 max-w-xs">
                             AI-powered code review sentinel that keeps your pull requests clean, secure, and production-ready.
                         </p>
                         <div className="flex space-x-4">

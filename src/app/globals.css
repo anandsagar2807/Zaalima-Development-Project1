@@ -63,15 +63,43 @@
   .gradient-text {
     @apply bg-gradient-to-r from-primary via-blue-500 to-amber-400 bg-clip-text text-transparent;
   }
+
+  /* Responsive container padding */
+  .section-padding {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+
+  /* Mobile-first text scaling */
+  .text-responsive-lg {
+    @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold;
+  }
+
+  .text-responsive-base {
+    @apply text-base sm:text-lg;
+  }
 }
 
 html {
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* Prevent horizontal overflow on mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Smaller scrollbar on mobile */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
+}
+
+@media (min-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 }
 
 ::-webkit-scrollbar-track {

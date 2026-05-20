@@ -8,7 +8,7 @@ const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL || 'https://github
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
       {/* Background Effects */}
       <div className="absolute inset-0 -z-10">
         {/* Gradient Orbs */}
@@ -20,7 +20,7 @@ export function Hero() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:14px_24px]" />
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="flex flex-col items-center text-center">
           {/* Badge */}
           <motion.div
@@ -40,7 +40,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-5xl"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight max-w-5xl px-2"
           >
             <span className="gradient-text">GitGuard AI</span>
             <br />
@@ -85,7 +85,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8"
+            className="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8"
           >
             {[
               { value: '10K+', label: 'PRs Analyzed' },
@@ -94,10 +94,10 @@ export function Hero() {
               { value: '500+', label: 'Teams' },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold gradient-text">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold gradient-text">
                   {stat.value}
                 </div>
-                <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
+                <div className="mt-1 text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
               </div>
             ))}
           </motion.div>
@@ -107,20 +107,20 @@ export function Hero() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
-            className="mt-16 w-full max-w-4xl"
+            className="mt-12 sm:mt-16 w-full max-w-4xl"
           >
             <div className="relative rounded-xl border bg-card/50 backdrop-blur-sm shadow-2xl overflow-hidden">
               {/* Window Controls */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/50">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="ml-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b bg-muted/50">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500" />
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-500" />
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500" />
+                <span className="ml-2 sm:ml-4 text-xs sm:text-sm text-muted-foreground truncate">
                   pull-request-review.ts
                 </span>
               </div>
               {/* Code Content */}
-              <div className="p-4 font-mono text-sm">
+              <div className="p-3 sm:p-4 font-mono text-xs sm:text-sm overflow-x-auto">
                 <div className="flex">
                   <span className="text-muted-foreground w-8">1</span>
                   <span className="text-blue-500">const</span>
