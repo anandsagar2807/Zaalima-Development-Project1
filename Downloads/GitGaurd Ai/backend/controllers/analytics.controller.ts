@@ -4,38 +4,42 @@ import { logger } from '../utils/logger';
 
 export async function getAnalyticsController(req: AuthRequest, res: Response) {
   try {
+    // Fields must match the frontend Analytics interface exactly:
+    // totalPRs, issuesDetected, securityWarnings, performanceWarnings, avgResponseTime (number), autoFixes
     const analytics = {
       totalPRs: 156,
       issuesDetected: 342,
-      issuesFixed: 298,
-      avgResponseTime: '2.3 min',
-      securityIssues: 23,
-      performanceIssues: 45,
-      codeQualityScore: 87,
+      securityWarnings: 23,
+      performanceWarnings: 45,
+      avgResponseTime: 2.3,
+      autoFixes: 298,
     };
 
+    // Frontend expects: { day, prs, issues }[]
     const prsPerDayData = [
-      { date: '2026-04-27', count: 12 },
-      { date: '2026-04-28', count: 15 },
-      { date: '2026-04-29', count: 18 },
-      { date: '2026-04-30', count: 14 },
-      { date: '2026-05-01', count: 20 },
-      { date: '2026-05-02', count: 16 },
-      { date: '2026-05-03', count: 8 },
+      { day: 'Mon', prs: 12, issues: 5 },
+      { day: 'Tue', prs: 15, issues: 8 },
+      { day: 'Wed', prs: 18, issues: 3 },
+      { day: 'Thu', prs: 14, issues: 6 },
+      { day: 'Fri', prs: 20, issues: 10 },
+      { day: 'Sat', prs: 16, issues: 4 },
+      { day: 'Sun', prs: 8, issues: 2 },
     ];
 
+    // Frontend expects: { name, value, color }[]
     const issuesBySeverity = [
-      { severity: 'critical', count: 12 },
-      { severity: 'high', count: 34 },
-      { severity: 'medium', count: 89 },
-      { severity: 'low', count: 207 },
+      { name: 'Critical', value: 12, color: '#ef4444' },
+      { name: 'High', value: 34, color: '#f97316' },
+      { name: 'Medium', value: 89, color: '#eab308' },
+      { name: 'Low', value: 207, color: '#22c55e' },
     ];
 
+    // Frontend expects: { name, value }[]
     const securityVsBugData = [
-      { category: 'Security', count: 23 },
-      { category: 'Bugs', count: 145 },
-      { category: 'Performance', count: 45 },
-      { category: 'Style', count: 129 },
+      { name: 'Security', value: 23 },
+      { name: 'Bugs', value: 145 },
+      { name: 'Performance', value: 45 },
+      { name: 'Style', value: 129 },
     ];
 
     res.json({
