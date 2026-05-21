@@ -112,6 +112,14 @@ function DashboardContentInner() {
         }
     }, [searchParams, checkSession])
 
+    // Auto-refresh analytics every 30 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchAnalytics()
+        }, 30000)
+        return () => clearInterval(interval)
+    }, [fetchAnalytics])
+
     // Show loading state while Clerk initializes
     if (!clerkLoaded || (authLoading && !isSignedIn)) {
         return (
@@ -120,14 +128,6 @@ function DashboardContentInner() {
             </div>
         )
     }
-
-    // Auto-refresh analytics every 30 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetchAnalytics()
-        }, 30000)
-        return () => clearInterval(interval)
-    }, [fetchAnalytics])
 
     if (isLoadingAnalytics && !analytics) {
         return (
@@ -139,12 +139,12 @@ function DashboardContentInner() {
 
     const stats = analytics
         ? [
-            { key: "totalPRs", label: "Total PRs", value: analytics.totalPRs.toLocaleString() },
-            { key: "issuesDetected", label: "Issues Detected", value: analytics.issuesDetected.toLocaleString() },
-            { key: "securityWarnings", label: "Security Warnings", value: analytics.securityWarnings },
-            { key: "performanceWarnings", label: "Performance Warnings", value: analytics.performanceWarnings },
-            { key: "avgResponseTime", label: "Avg Response Time", value: `${analytics.avgResponseTime}s` },
-            { key: "autoFixes", label: "Auto Fixes Applied", value: analytics.autoFixes.toLocaleString() },
+            { key: "totalPRs", label: "Total PRs", value: (analytics.totalPRs ?? 0).toLocaleString() },
+            { key: "issuesDetected", label: "Issues Detected", value: (analytics.issuesDetected ?? 0).toLocaleString() },
+            { key: "securityWarnings", label: "Security Warnings", value: analytics.securityWarnings ?? 0 },
+            { key: "performanceWarnings", label: "Performance Warnings", value: analytics.performanceWarnings ?? 0 },
+            { key: "avgResponseTime", label: "Avg Response Time", value: `${analytics.avgResponseTime ?? 0}s` },
+            { key: "autoFixes", label: "Auto Fixes Applied", value: (analytics.autoFixes ?? 0).toLocaleString() },
         ]
         : []
 
