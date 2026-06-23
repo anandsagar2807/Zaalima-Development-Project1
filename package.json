@@ -1,0 +1,22 @@
+{
+  "name": "gitguard-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitGuard AI - AI-powered GitHub PR review and security analysis platform",
+  "scripts": {
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "start": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run start --prefix backend\" \"npm run start --prefix frontend\"",
+    "start:backend": "npm run start --prefix backend",
+    "start:frontend": "npm run start --prefix frontend",
+    "lint": "npm run lint --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
