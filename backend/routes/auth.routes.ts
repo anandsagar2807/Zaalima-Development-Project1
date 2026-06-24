@@ -28,18 +28,28 @@ router.get('/github', (req: Request, res: Response) => {
     res.cookie('gitguard_github_oauth_state', state, {
       httpOnly: true,
       secure: env.nodeEnv === 'production',
-      sameSite: 'lax',
+      sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
       maxAge: 10 * 60 * 1000, // 10 minutes
     });
+
+    // Compute the callback URL dynamically from the request origin so it
+    // always points back to THIS backend (e.g. https://gitgaurd-ai.onrender.com).
+    // Falls back to the configured GITHUB_CALLBACK_URL only when the request
+    // origin can't be determined (local dev / direct curl).
+    const requestOrigin = `${req.protocol}://${req.get('host')}`;
+    const callbackUrl =
+      env.nodeEnv === 'production' && req.get('host')
+        ? `${requestOrigin}/api/auth/github/callback`
+        : GITHUB_CALLBACK_URL;
 
     // Build GitHub authorization URL
     const authUrl = new URL('https://github.com/login/oauth/authorize');
     authUrl.searchParams.set('client_id', GITHUB_CLIENT_ID);
-    authUrl.searchParams.set('redirect_uri', GITHUB_CALLBACK_URL);
+    authUrl.searchParams.set('redirect_uri', callbackUrl);
     authUrl.searchParams.set('scope', GITHUB_SCOPES.join(' '));
     authUrl.searchParams.set('state', state);
 
-    logger.info('Redirecting to GitHub OAuth', { redirectUri: GITHUB_CALLBACK_URL });
+    logger.info('Redirecting to GitHub OAuth', { redirectUri: callbackUrl });
     res.redirect(authUrl.toString());
   } catch (error) {
     logger.error('GitHub OAuth initiation failed', { error });
@@ -55,6 +65,17 @@ router.get('/github/callback', async (req: Request, res: Response) => {
   try {
     const { code, state } = req.query;
     const storedState = req.cookies?.gitguard_github_oauth_state;
+
+    // Compute the callback URL dynamically from the request origin so the
+    // redirect_uri sent to GitHub during token exchange matches the one used
+    // in the /github authorize request. This avoids relying on the
+    // GITHUB_CALLBACK_URL env var (which may be unset on Render and fall back
+    // to localhost, causing the OAuth flow to break).
+    const requestOrigin = `${req.protocol}://${req.get('host')}`;
+    const callbackUrl =
+      env.nodeEnv === 'production' && req.get('host')
+        ? `${requestOrigin}/api/auth/github/callback`
+        : GITHUB_CALLBACK_URL;
 
     // Validate state parameter (CSRF protection)
     if (!state || !storedState || state !== storedState || !verifyStateToken(state as string)) {
@@ -81,11 +102,11 @@ router.get('/github/callback', async (req: Request, res: Response) => {
         client_id: GITHUB_CLIENT_ID,
         client_secret: GITHUB_CLIENT_SECRET,
         code,
-        redirect_uri: GITHUB_CALLBACK_URL,
+        redirect_uri: callbackUrl,
       }),
     });
 
-    const tokenData = await tokenResponse.json();
+    const tokenData = (await tokenResponse.json()) as any;
 
     if (tokenData.error || !tokenData.access_token) {
       logger.error('Failed to exchange code for token', { error: tokenData.error });
@@ -102,7 +123,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
       },
     });
 
-    const githubUser = await userResponse.json();
+    const githubUser = (await userResponse.json()) as any;
 
     if (!githubUser.id) {
       logger.error('Failed to fetch GitHub user profile');
@@ -118,7 +139,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
           Accept: 'application/vnd.github.v3+json',
         },
       });
-      const emails = await emailResponse.json();
+      const emails = (await emailResponse.json()) as any[];
       const primaryEmail = emails.find((e: any) => e.primary);
       email = primaryEmail?.email || emails[0]?.email;
     }
@@ -217,7 +238,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
     res.cookie('token', jwtToken, {
       httpOnly: true,
       secure: env.nodeEnv === 'production',
-      sameSite: 'strict',
+      sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 

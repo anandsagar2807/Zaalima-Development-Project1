@@ -29,7 +29,7 @@ export async function getRepositoriesController(req: AuthRequest, res: Response)
       throw new Error('Failed to fetch repositories from GitHub');
     }
 
-    const repos = await response.json();
+    const repos = (await response.json()) as any[];
 
     // Transform repository data
     const repositories = repos.map((repo: any) => ({

@@ -23,9 +23,6 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@backend/*": [
-        "../backend/*"
-      ],
       "@/*": [
         "./src/*"
       ]

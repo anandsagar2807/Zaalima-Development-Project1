@@ -23,16 +23,39 @@ import { env } from './config/env';
 export function createApp(): Express {
   const app = express();
 
+  // Trust the first proxy hop so that req.protocol / req.ip reflect the
+  // original client request (https) when running behind Render's reverse
+  // proxy. Without this, req.protocol returns "http" and dynamic OAuth
+  // callback URLs would be computed incorrectly.
+  app.set('trust proxy', 1);
+
   // Connect to PostgreSQL
   connectDatabase().catch((error) => {
     logger.error('Failed to connect to database', { error });
     // Don't exit – allow the server to start even without DB (webhook route can still work)
   });
 
-  // Middleware
+  // Middleware — CORS configured for cross-origin (Vercel frontend → Render backend)
+  const allowedOrigins = [
+    env.frontendUrl,                              // e.g. http://localhost:3000 (dev) or https://your-app.vercel.app (prod)
+    'https://git-gaurd-ai.vercel.app',            // Vercel production deployment
+    'https://git-gaurd-ai-git-main.vercel.app',   // Vercel preview branch deployment
+  ].filter(Boolean);
+
   app.use(
     cors({
-      origin: env.frontendUrl,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (curl, server-to-server, health checks)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        // Allow any Vercel preview deployment for this project
+        if (origin.endsWith('.vercel.app')) {
+          return callback(null, true);
+        }
+        callback(new Error(`CORS blocked origin: ${origin}`));
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],

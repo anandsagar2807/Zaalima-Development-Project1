@@ -18,7 +18,7 @@ const plans = [
             "Up to 3 repositories",
             "100 PR reviews/month",
             "Basic code analysis",
-            "GitHub integration",
+            "Professional GitHub integration",
             "Community support",
         ],
         cta: "Get Started",

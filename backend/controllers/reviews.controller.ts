@@ -33,7 +33,7 @@ export async function getReviewsController(req: AuthRequest, res: Response) {
         throw new Error('Failed to fetch PR from GitHub');
       }
 
-      const pr = await prResponse.json();
+      const pr = (await prResponse.json()) as any;
 
       // Fetch PR diff
       const diffResponse = await fetch(pr.diff_url, {

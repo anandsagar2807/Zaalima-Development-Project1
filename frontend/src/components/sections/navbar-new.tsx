@@ -16,7 +16,7 @@ const navItems = [
 const dashboardNavItems = [
   { name: 'Overview', href: '/dashboard' },
   { name: 'Repositories', href: '/dashboard/repositories' },
-  { name: 'GitHub Connect', href: '/connect-github' },
+  { name: 'Professional GitHub', href: '/connect-github' },
   { name: 'Settings', href: '/dashboard/settings' },
 ]
 

@@ -39,9 +39,9 @@ export default function Home() {
           aria-modal="true"
         >
           <div className="w-full max-w-md rounded-xl bg-white p-6 text-black shadow-xl dark:bg-zinc-900 dark:text-white">
-            <h2 className="text-lg font-semibold">Connect GitHub</h2>
+            <h2 className="text-lg font-semibold">Connect Professional GitHub</h2>
             <p className="mt-2 text-sm opacity-90">
-              To enable automated PR reviews and insights, connect your GitHub account.
+              To enable automated PR reviews and insights, connect your professional GitHub account.
             </p>
 
             <div className="mt-6 flex gap-3">

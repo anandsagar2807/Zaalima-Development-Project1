@@ -1,0 +1,46 @@
+# Render Blueprint — Backend Web Service
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: gitgaurd-ai
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false  # Set manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CALLBACK_URL
+        value: https://gitgaurd-ai.onrender.com/api/auth/github/callback
+      - key: FRONTEND_URL
+        value: https://git-gaurd-ai.vercel.app
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_WEBHOOK_SECRET
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: LLM_MODEL
+        value: poolside/laguna-xs.2:free
+      - key: LLM_MAX_TOKENS
+        value: 4096
+      - key: LLM_TIMEOUT_MS
+        value: 60000
+      - key: LLM_MAX_DIFF_SIZE
+        value: 50000
+      - key: ENABLE_INSFORGE
+        value: "false"

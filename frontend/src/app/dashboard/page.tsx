@@ -100,8 +100,8 @@ function DashboardContentInner() {
             checkSession()
 
             const message = githubLogin
-                ? `GitHub account @${githubLogin} connected successfully!`
-                : "GitHub account connected successfully!"
+                ? `Professional GitHub account @${githubLogin} connected successfully!`
+                : "Professional GitHub account connected successfully!"
             toast.success(message)
 
             // Clean up URL parameters

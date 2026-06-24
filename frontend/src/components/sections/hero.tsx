@@ -64,7 +64,7 @@ export function Hero() {
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl"
                     >
-                        Intelligent code analysis that listens to GitHub PR events, analyzes diffs
+                        Intelligent code analysis that listens to your professional GitHub PR events, analyzes diffs
                         in real-time, and posts automated review comments with suggested fixes.
                     </motion.p>
 
@@ -171,15 +171,15 @@ export function Hero() {
                                 </div>
                                 <div className="flex">
                                     <span className="text-muted-foreground w-8">5</span>
-                                    <span className="text-green-500">// ✓ Security: No vulnerabilities found</span>
+                                    <span className="text-green-500">{"// ✓ Security: No vulnerabilities found"}</span>
                                 </div>
                                 <div className="flex">
                                     <span className="text-muted-foreground w-8">6</span>
-                                    <span className="text-green-500">// ✓ Performance: 2 optimizations suggested</span>
+                                    <span className="text-green-500">{"// ✓ Performance: 2 optimizations suggested"}</span>
                                 </div>
                                 <div className="flex">
                                     <span className="text-muted-foreground w-8">7</span>
-                                    <span className="text-yellow-500">// ⚠ Style: 3 formatting issues</span>
+                                    <span className="text-yellow-500">{"// ⚠ Style: 3 formatting issues"}</span>
                                 </div>
                             </div>
                         </div>

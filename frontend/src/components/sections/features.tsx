@@ -19,7 +19,7 @@ const features = [
     {
         icon: Webhook,
         title: "Webhook Integration",
-        description: "Seamlessly connects to GitHub webhooks. Listens to PR events in real-time and triggers instant code analysis.",
+        description: "Seamlessly connects to your professional GitHub webhooks. Listens to PR events in real-time and triggers instant code analysis.",
         gradient: "from-blue-500 to-cyan-500",
     },
     {

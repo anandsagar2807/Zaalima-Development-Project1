@@ -22,6 +22,7 @@ const toPositiveInteger = (value: string | undefined, fallback: number): number 
 
 export const env = {
     nodeEnv: process.env.NODE_ENV || "development",
+    // Render sets PORT automatically; fall back to 4000 for local dev
     port: toPositiveInteger(process.env.PORT, 4000),
     githubToken: process.env.GITHUB_TOKEN || "",
     githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || "",
@@ -37,8 +38,13 @@ export const env = {
     jwtSecret: process.env.JWT_SECRET || "default-jwt-secret-change-in-production",
     encryptionKey: process.env.ENCRYPTION_KEY || "default-encryption-key-change-in-production",
 
-    // Frontend
-    frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+    // Frontend — in production default to the known Vercel deployment so
+    // post-OAuth redirects work even if FRONTEND_URL isn't explicitly set.
+    frontendUrl:
+        process.env.FRONTEND_URL ||
+        (process.env.NODE_ENV === "production"
+            ? "https://git-gaurd-ai.vercel.app"
+            : "http://localhost:3000"),
 
     // LLM configuration
     llmApiKey: process.env.LLM_API_KEY || "",

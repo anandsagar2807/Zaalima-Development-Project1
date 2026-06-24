@@ -94,15 +94,15 @@ export function GitHubConnectModal() {
                         <ShieldCheck className="h-3.5 w-3.5" />
                         Secure Setup
                     </div>
-                    <h2 className="mt-3 text-2xl font-semibold tracking-tight">Connect GitHub</h2>
+                    <h2 className="mt-3 text-2xl font-semibold tracking-tight">Connect Professional GitHub</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        Your Google sign-in is ready. Connect GitHub now to sync repositories and run AI reviews.
+                        Your Google sign-in is ready. Connect your professional GitHub account now to sync repositories and run AI reviews.
                     </p>
                 </div>
 
                 <div className="space-y-4 p-6">
                     <div className="rounded-xl border border-border/70 bg-muted/30 p-4 text-sm text-muted-foreground">
-                        You will be asked to authorize GitHub access, similar to the standard GitHub consent screen.
+                        You will be asked to authorize professional GitHub access, similar to the standard GitHub consent screen.
                     </div>
                     <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                         <Button variant="outline" onClick={dismiss}>Maybe later</Button>

@@ -24,10 +24,10 @@ function GithubConnectedContent() {
             <div className="mx-auto max-w-xl rounded-2xl border border-border/70 bg-card p-8 shadow-xl">
                 <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-                    <h1 className="text-2xl font-bold tracking-tight">GitHub Connected</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">Professional GitHub Connected</h1>
                 </div>
                 <p className="mt-3 text-muted-foreground">
-                    Authorization completed successfully{githubLogin ? ` for @${githubLogin}` : ""}. Redirecting to your repositories...
+                    Authorization completed successfully{githubLogin ? ` for @${githubLogin}` : ""}. Your professional GitHub account is now connected. Redirecting to your repositories...
                 </p>
                 <div className="mt-6 flex gap-3">
                     <Link href="/dashboard/repositories">

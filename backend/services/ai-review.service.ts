@@ -87,7 +87,7 @@ Respond in JSON format with the following structure:
       throw new Error(`LLM API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     const content = data.choices?.[0]?.message?.content;
 
     if (!content) {

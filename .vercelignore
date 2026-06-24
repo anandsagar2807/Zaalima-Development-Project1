@@ -1,0 +1,10 @@
+# Ignore root-level package files (Vercel should only use frontend/)
+/package.json
+/package-lock.json
+# Ignore backend (deployed separately on Render)
+backend/
+# Ignore dev scripts
+start-dev.bat
+start-dev.sh
+scrub-secrets.ps1
+update-oauth-credentials.sh

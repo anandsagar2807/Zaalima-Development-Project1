@@ -15,7 +15,7 @@ const steps = [
         number: "01",
         icon: GitBranch,
         title: "Connect Your Repository",
-        description: "Install GitGuard AI GitHub App and connect your repositories in one click. Supports GitHub Cloud and GitHub Enterprise.",
+        description: "Install GitGuard AI GitHub App and connect your professional repositories in one click. Supports GitHub Cloud and GitHub Enterprise.",
     },
     {
         number: "02",

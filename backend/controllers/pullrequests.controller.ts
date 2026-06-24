@@ -26,7 +26,7 @@ export async function getPullRequestsController(req: AuthRequest, res: Response)
       throw new Error('Failed to fetch repositories');
     }
 
-    const repos = await reposResponse.json();
+    const repos = (await reposResponse.json()) as any[];
     const pullRequests: any[] = [];
 
     // Fetch PRs from each repository
@@ -43,7 +43,7 @@ export async function getPullRequestsController(req: AuthRequest, res: Response)
         );
 
         if (prsResponse.ok) {
-          const prs = await prsResponse.json();
+          const prs = (await prsResponse.json()) as any[];
 
           for (const pr of prs) {
             pullRequests.push({

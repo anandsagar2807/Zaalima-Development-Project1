@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
     title: "GitGuard AI - AI-Powered Pull Request Sentinel",
-    description: "Intelligent code analysis that listens to GitHub PR events, analyzes diffs in real-time, and posts automated review comments with suggested fixes.",
+    description: "Intelligent code analysis that listens to your professional GitHub PR events, analyzes diffs in real-time, and posts automated review comments with suggested fixes.",
 }
 
 export default function RootLayout({

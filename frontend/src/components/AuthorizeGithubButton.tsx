@@ -69,8 +69,8 @@ export default function AuthorizeGithubButton({
         {showConnected
           ? 'GitHub Connected'
           : isLoading
-          ? 'Connecting...'
-          : 'Authorize GitHub'}
+            ? 'Connecting...'
+            : 'Authorize GitHub'}
       </span>
     </button>
   );

@@ -36,7 +36,7 @@ router.get('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
       throw new Error('Failed to fetch GitHub profile');
     }
 
-    const githubProfile = await response.json();
+    const githubProfile = (await response.json()) as any;
 
     // Update user data with fresh info
     await updateUserGitHub(String(user._id), {
@@ -100,7 +100,7 @@ router.get('/repos', authMiddleware, async (req: AuthRequest, res: Response) => 
       throw new Error('Failed to fetch repositories');
     }
 
-    let repos = await response.json();
+    let repos = (await response.json()) as any[];
 
     // Client-side search filter
     if (search) {
@@ -207,7 +207,7 @@ router.post('/sync', authMiddleware, async (req: AuthRequest, res: Response) => 
       throw new Error('Failed to sync GitHub profile');
     }
 
-    const githubProfile = await response.json();
+    const githubProfile = (await response.json()) as any;
 
     await updateUserGitHub(String(user._id), {
       githubUsername: githubProfile.login,

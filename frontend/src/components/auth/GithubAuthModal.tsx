@@ -64,12 +64,12 @@ export function GithubAuthModal() {
 
           {/* Title */}
           <h2 className="text-xl font-bold text-center mb-2">
-            Connect GitHub Account
+            Connect Professional GitHub Account
           </h2>
 
           {/* Description */}
           <p className="text-sm text-muted-foreground text-center mb-6">
-            GitGuard AI needs access to your GitHub account to analyze pull requests,
+            GitGuard AI needs access to your professional GitHub account to analyze pull requests,
             detect issues, and provide AI-powered code reviews.
           </p>
 
@@ -101,7 +101,7 @@ export function GithubAuthModal() {
 
           {/* Footer Note */}
           <p className="text-xs text-muted-foreground text-center mt-4">
-            You can revoke access anytime from your GitHub settings
+            You can revoke access anytime from your professional GitHub settings
           </p>
         </div>
       </div>
