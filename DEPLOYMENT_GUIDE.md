@@ -108,7 +108,7 @@ Go to Vercel project → **Settings** → **Environment Variables** and add:
 | `NEXT_PUBLIC_APP_ENV` | `production` | Production |
 | `NEXT_PUBLIC_GITHUB_CLIENT_ID` | *(your GitHub OAuth client ID)* | All |
 | `GITHUB_CLIENT_SECRET` | *(your GitHub OAuth client secret)* | Production + Preview |
-| `GITHUB_OAUTH_REDIRECT_URI` | `https://frontend-amber-six-35.vercel.app/api/connect-github/callback` | Production |
+| `GITHUB_OAUTH_REDIRECT_URI` | `https://gitgaurd-ai.onrender.com/api/auth/github/callback` | Production |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | *(your Clerk publishable key)* | All |
 | `CLERK_SECRET_KEY` | *(your Clerk secret key)* | Production + Preview |
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` | All |
