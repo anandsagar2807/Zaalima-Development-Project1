@@ -43,7 +43,7 @@ export const env = {
     frontendUrl:
         process.env.FRONTEND_URL ||
         (process.env.NODE_ENV === "production"
-            ? "https://git-gaurd-ai.vercel.app"
+            ? "https://frontend-amber-six-35.vercel.app"
             : "http://localhost:3000"),
 
     // LLM configuration

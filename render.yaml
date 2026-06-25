@@ -25,7 +25,7 @@ services:
       - key: GITHUB_CALLBACK_URL
         value: https://gitgaurd-ai.onrender.com/api/auth/github/callback
       - key: FRONTEND_URL
-        value: https://git-gaurd-ai.vercel.app
+        value: https://frontend-amber-six-35.vercel.app
       - key: GITHUB_TOKEN
         sync: false
       - key: GITHUB_WEBHOOK_SECRET

@@ -38,7 +38,8 @@ export function createApp(): Express {
   // Middleware — CORS configured for cross-origin (Vercel frontend → Render backend)
   const allowedOrigins = [
     env.frontendUrl,                              // e.g. http://localhost:3000 (dev) or https://your-app.vercel.app (prod)
-    'https://git-gaurd-ai.vercel.app',            // Vercel production deployment
+    'https://frontend-amber-six-35.vercel.app',   // Vercel production deployment
+    'https://git-gaurd-ai.vercel.app',            // Legacy Vercel deployment (kept for compatibility)
     'https://git-gaurd-ai-git-main.vercel.app',   // Vercel preview branch deployment
   ].filter(Boolean);
 

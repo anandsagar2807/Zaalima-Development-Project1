@@ -10,7 +10,7 @@ This guide covers deploying the **frontend** to Vercel and the **backend** to Re
 ┌─────────────────────────┐         ┌──────────────────────────────┐
 │   Vercel (Frontend)     │         │   Render (Backend)            │
 │   Next.js 14            │────────▶│   Express + tsx               │
-│   git-gaurd-ai.vercel.app│  HTTPS  │   gitgaurd-ai.onrender.com    │
+│   frontend-amber-six-35.vercel.app│HTTPS│   gitgaurd-ai.onrender.com    │
 │                         │         │                               │
 │   Port: 443 (managed)   │         │   Port: auto (PORT env var)   │
 └─────────────────────────┘         └──────────────────────────────┘
@@ -51,7 +51,7 @@ Go to your Render service → **Environment** tab and add:
 | `GITHUB_CLIENT_ID` | *(your GitHub OAuth App client ID)* |
 | `GITHUB_CLIENT_SECRET` | *(your GitHub OAuth App client secret)* |
 | `GITHUB_CALLBACK_URL` | `https://gitgaurd-ai.onrender.com/api/auth/github/callback` |
-| `FRONTEND_URL` | `https://git-gaurd-ai.vercel.app` *(update after Vercel deploy)* |
+| `FRONTEND_URL` | `https://frontend-amber-six-35.vercel.app` *(update after Vercel deploy)* |
 | `GITHUB_TOKEN` | *(your GitHub PAT)* |
 | `GITHUB_WEBHOOK_SECRET` | *(your webhook secret)* |
 | `LLM_API_KEY` | *(your OpenRouter API key)* |
@@ -108,7 +108,7 @@ Go to Vercel project → **Settings** → **Environment Variables** and add:
 | `NEXT_PUBLIC_APP_ENV` | `production` | Production |
 | `NEXT_PUBLIC_GITHUB_CLIENT_ID` | *(your GitHub OAuth client ID)* | All |
 | `GITHUB_CLIENT_SECRET` | *(your GitHub OAuth client secret)* | Production + Preview |
-| `GITHUB_OAUTH_REDIRECT_URI` | `https://git-gaurd-ai.vercel.app/api/connect-github/callback` | Production |
+| `GITHUB_OAUTH_REDIRECT_URI` | `https://frontend-amber-six-35.vercel.app/api/connect-github/callback` | Production |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | *(your Clerk publishable key)* | All |
 | `CLERK_SECRET_KEY` | *(your Clerk secret key)* | Production + Preview |
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` | All |
@@ -118,7 +118,7 @@ Go to Vercel project → **Settings** → **Environment Variables** and add:
 ### Step 4: Deploy
 
 Click **Deploy**. Vercel will build and deploy.
-Your frontend URL will be: `https://git-gaurd-ai.vercel.app`
+Your frontend URL will be: `https://frontend-amber-six-35.vercel.app`
 
 ---
 
@@ -130,7 +130,7 @@ Go to [GitHub OAuth Apps](https://github.com/settings/developers) → your OAuth
 
 | Setting | Value |
 |---------|-------|
-| **Homepage URL** | `https://git-gaurd-ai.vercel.app` |
+| **Homepage URL** | `https://frontend-amber-six-35.vercel.app` |
 | **Authorization callback URL** | `https://gitgaurd-ai.onrender.com/api/auth/github/callback` |
 
 > **Important:** The callback URL must point to the **Render backend** (not Vercel),
@@ -143,7 +143,7 @@ Go to [GitHub OAuth Apps](https://github.com/settings/developers) → your OAuth
 After your Vercel deployment is live, update the Render environment variable:
 
 1. Go to Render → your backend service → **Environment**
-2. Update `FRONTEND_URL` to your actual Vercel URL (e.g., `https://git-gaurd-ai.vercel.app`)
+2. Update `FRONTEND_URL` to your actual Vercel URL (e.g., `https://frontend-amber-six-35.vercel.app`)
 3. Save and restart the service
 
 ---
