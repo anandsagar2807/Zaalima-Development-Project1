@@ -162,7 +162,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
             error: null
         })
         try {
-            const response = await fetch('/api/dashboard')
+            const response = await fetch('/api/dashboard/summary')
             const data = await response.json()
             const summary = data.summary
 
@@ -312,7 +312,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                         r.id === id ? { ...r, securityScan: !r.securityScan } : r
                     ),
                 })),
-                set({ error: "Failed to toggle security scan" })
+                    set({ error: "Failed to toggle security scan" })
             }
         }
     },
@@ -354,7 +354,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                         r.id === id ? { ...r, autoFix: !r.autoFix } : r
                     ),
                 })),
-                set({ error: "Failed to toggle auto fix" })
+                    set({ error: "Failed to toggle auto fix" })
             }
         }
     },
@@ -435,7 +435,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                     r.id === id ? { ...r, status: "pending" as const } : r
                 ),
             })),
-            set({ error: "Failed to apply fix" })
+                set({ error: "Failed to apply fix" })
         }
     },
 
@@ -466,7 +466,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                     r.id === id ? { ...r, status: "pending" as const } : r
                 ),
             })),
-            set({ error: "Failed to ignore rule" })
+                set({ error: "Failed to ignore rule" })
         }
     },
 
@@ -545,7 +545,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                     r.id === id ? { ...r, enabled: !r.enabled } : r
                 ),
             })),
-            set({ error: "Failed to toggle rule" })
+                set({ error: "Failed to toggle rule" })
         }
     },
 

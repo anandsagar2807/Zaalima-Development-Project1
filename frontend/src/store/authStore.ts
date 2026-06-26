@@ -50,7 +50,15 @@ interface AuthState {
   syncGithubProfile: () => Promise<void>;
 }
 
+// Use same-origin API routes (Vercel serverless functions) for all auth calls.
+// These routes proxy to the Render backend, forwarding cookies automatically.
+// This avoids cross-origin (third-party) cookie issues where browsers block
+// cookies set on the Render domain from being read by the Vercel frontend.
+// In local dev (no Vercel), fall back to direct backend calls.
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const isLocalDev = API_URL.startsWith('http://localhost') || API_URL.startsWith('http://127.0.0.1');
+// Same-origin base for Vercel API routes (relative path, resolved by browser)
+const PROXY_BASE = isLocalDev ? API_URL : '';
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -79,7 +87,7 @@ export const useAuthStore = create<AuthState>()(
       checkSession: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/dashboard`, {
+          const response = await fetch(`${PROXY_BASE}/api/dashboard`, {
             credentials: 'include',
           });
 
@@ -106,7 +114,7 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           // Call backend to clear server-side session/cookies
-          await fetch(`${API_URL}/api/sign-out`, {
+          await fetch(`${PROXY_BASE}/api/sign-out`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -131,7 +139,9 @@ export const useAuthStore = create<AuthState>()(
 
       disconnectGithub: async () => {
         try {
-          const response = await fetch(`${API_URL}/api/settings`, {
+          // Use the dedicated GitHub disconnect endpoint (POST /api/github/disconnect)
+          // which clears the user's GitHub connection data server-side.
+          const response = await fetch(`${PROXY_BASE}/api/github/disconnect`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -162,13 +172,33 @@ export const useAuthStore = create<AuthState>()(
       fetchGithubProfile: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/dashboard`, {
+          // The backend root /api/dashboard returns { user: {...} } where the
+          // user object embeds the GitHub profile fields. We map those into the
+          // GitHubProfile shape expected by the UI.
+          const response = await fetch(`${PROXY_BASE}/api/dashboard`, {
             credentials: 'include',
           });
 
           if (response.ok) {
             const data = await response.json();
-            get().setGithubProfile(data.profile);
+            const user = data.user;
+            if (user && user.githubConnected) {
+              get().setGithubProfile({
+                id: 0,
+                login: user.githubUsername || '',
+                name: user.name || user.githubUsername || '',
+                avatar_url: user.githubAvatar || user.avatar || '',
+                html_url: user.githubProfileUrl || '',
+                bio: '',
+                public_repos: user.githubPublicRepos || 0,
+                followers: user.githubFollowers || 0,
+                following: user.githubFollowing || 0,
+                created_at: user.githubConnectedAt || '',
+                updated_at: user.githubConnectedAt || '',
+              });
+            } else {
+              get().setGithubProfile(null);
+            }
           } else {
             throw new Error('Failed to fetch GitHub profile');
           }
@@ -183,7 +213,9 @@ export const useAuthStore = create<AuthState>()(
       syncGithubProfile: async () => {
         try {
           set({ loading: true });
-          const response = await fetch(`${API_URL}/api/dashboard`, {
+          // Use the dedicated GitHub sync endpoint (POST /api/github/sync)
+          // which refreshes the user's GitHub profile data from the GitHub API.
+          const response = await fetch(`${PROXY_BASE}/api/github/sync`, {
             method: 'POST',
             credentials: 'include',
           });

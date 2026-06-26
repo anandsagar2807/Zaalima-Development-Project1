@@ -234,7 +234,7 @@ router.get('/github/callback', async (req: Request, res: Response) => {
       email: user.email || email,
     });
 
-    // Set JWT in httpOnly cookie
+    // Set JWT in httpOnly cookie (for same-origin / local dev scenarios)
     res.cookie('token', jwtToken, {
       httpOnly: true,
       secure: env.nodeEnv === 'production',
@@ -247,8 +247,12 @@ router.get('/github/callback', async (req: Request, res: Response) => {
       githubUsername: githubUser.login,
     });
 
-    // Redirect to dashboard with success
-    const redirectUrl = new URL(`${FRONTEND_URL}/dashboard`);
+    // Redirect to the frontend's token-set route which will set the JWT as a
+    // same-origin httpOnly cookie on the Vercel domain, then redirect to /dashboard.
+    // This avoids cross-origin (third-party) cookie issues where browsers block
+    // cookies set on the Render domain from being read by the Vercel frontend.
+    const redirectUrl = new URL(`${FRONTEND_URL}/api/auth/set-token`);
+    redirectUrl.searchParams.set("token", jwtToken);
     redirectUrl.searchParams.set("github_connected", "true");
     if (githubUser.login) {
       redirectUrl.searchParams.set("github_login", githubUser.login);
