@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
-import { useAuth, useUser } from "@clerk/nextjs"
 import { Github, ShieldCheck, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAuthStore } from "@/store/authStore"
 
 const DISMISS_KEY_PREFIX = "gitguard:github-connect-dismissed:"
 const CONNECTED_KEY_PREFIX = "gitguard:github-connected:"
@@ -13,28 +13,15 @@ export function GitHubConnectModal() {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const prompt = searchParams?.get("prompt") ?? null
-    const { isSignedIn } = useAuth()
-    const { user, isLoaded } = useUser()
+    const { user, authenticated, githubConnected } = useAuthStore()
     const [open, setOpen] = useState(false)
 
-    const externalAccounts = user?.externalAccounts ?? []
-
-    const hasGoogleAccount = useMemo(() => {
-        return externalAccounts.some((account) =>
-            String(account.provider || "").toLowerCase().includes("google")
-        )
-    }, [externalAccounts])
-
-    const hasGithubAccount = useMemo(() => {
-        return externalAccounts.some((account) =>
-            String(account.provider || "").toLowerCase().includes("github")
-        )
-    }, [externalAccounts])
+    const userId = user?.id ?? "guest"
 
     useEffect(() => {
         if (prompt === "connect-github") {
             setOpen(true)
-            window.sessionStorage.removeItem(`${DISMISS_KEY_PREFIX}${user?.id ?? "guest"}`)
+            window.sessionStorage.removeItem(`${DISMISS_KEY_PREFIX}${userId}`)
 
             const url = new URL(window.location.href)
             url.searchParams.delete("prompt")
@@ -47,16 +34,22 @@ export function GitHubConnectModal() {
             window.sessionStorage.removeItem(`${DISMISS_KEY_PREFIX}${user.id}`)
             setOpen(false)
         }
-    }, [prompt, searchParams, user?.id])
+    }, [prompt, searchParams, user?.id, userId])
 
     useEffect(() => {
-        if (!isLoaded || !isSignedIn || !user) return
-        if (!hasGoogleAccount && prompt !== "connect-github") return
+        if (!authenticated || !user) return
+        if (prompt !== "connect-github" && !user.githubConnected) return
         if (pathname?.startsWith("/connect-github")) return
         if (pathname?.startsWith("/sign-in") || pathname?.startsWith("/sign-up")) return
 
+        // If GitHub is already connected (per backend session), don't show the modal
+        if (githubConnected) {
+            setOpen(false)
+            return
+        }
+
         const connectedFlag = window.localStorage.getItem(`${CONNECTED_KEY_PREFIX}${user.id}`)
-        if (connectedFlag === "1" || document.cookie.includes("gitguard_github_connected=1") || hasGithubAccount) {
+        if (connectedFlag === "1" || document.cookie.includes("gitguard_github_connected=1")) {
             setOpen(false)
             return
         }
@@ -66,7 +59,7 @@ export function GitHubConnectModal() {
         if (!dismissed) {
             setOpen(true)
         }
-    }, [hasGithubAccount, hasGoogleAccount, isLoaded, isSignedIn, pathname, prompt, user])
+    }, [authenticated, githubConnected, user, pathname, prompt])
 
     const dismiss = () => {
         if (user?.id) {
@@ -96,7 +89,7 @@ export function GitHubConnectModal() {
                     </div>
                     <h2 className="mt-3 text-2xl font-semibold tracking-tight">Connect Professional GitHub</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        Your Google sign-in is ready. Connect your professional GitHub account now to sync repositories and run AI reviews.
+                        Your account is ready. Connect your professional GitHub account now to sync repositories and run AI reviews.
                     </p>
                 </div>
 

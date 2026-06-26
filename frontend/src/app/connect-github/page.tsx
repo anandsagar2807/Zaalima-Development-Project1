@@ -4,7 +4,6 @@ import { Suspense, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
 import { Activity, CheckCircle2, FileText, Github, Loader2, Mail, RefreshCw, Unlink, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import AuthorizeGithubButton from "@/components/AuthorizeGithubButton"
@@ -12,12 +11,10 @@ import { useAuthStore } from "@/store/authStore"
 
 function ConnectGithubContent() {
     const searchParams = useSearchParams()
-    const { user } = useUser()
     const { user: authUser, githubProfile, githubConnected, disconnectGithub, connectGithub } = useAuthStore()
-    const clerkUsername = user?.username || user?.firstName || user?.primaryEmailAddress?.emailAddress
     const storeUsername = authUser?.name || authUser?.email
     const githubUsername = githubProfile?.login || authUser?.githubUsername || null
-    const username = clerkUsername || storeUsername || "your account"
+    const username = storeUsername || "your account"
     const oauthError = searchParams ? searchParams.get("error") : null
     const [isDisconnecting, setIsDisconnecting] = useState(false)
     const [isSwitching, setIsSwitching] = useState(false)

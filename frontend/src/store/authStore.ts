@@ -57,7 +57,11 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       githubProfile: null,
-      loading: false,
+      // Start in loading state so consumers (e.g. dashboard page) wait for the
+      // initial checkSession() call before deciding to redirect unauthenticated users.
+      // Without this, a new user landing on /dashboard after OAuth gets redirected
+      // to home before the JWT cookie session can be verified.
+      loading: true,
       authenticated: false,
       githubConnected: false,
 

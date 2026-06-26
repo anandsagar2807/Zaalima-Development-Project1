@@ -3,7 +3,6 @@
 import { useEffect, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
 import { motion } from "framer-motion"
 import { GitPullRequest, AlertTriangle, Shield, Zap, Clock, Wand2, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -50,8 +49,7 @@ function DashboardContent() {
 function DashboardContentInner() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { isLoaded: clerkLoaded, isSignedIn, user: clerkUser } = useUser()
-    const { loading: authLoading, checkSession } = useAuthStore()
+    const { loading: authLoading, authenticated, checkSession } = useAuthStore()
     const {
         analytics,
         prsPerDayData,
@@ -63,25 +61,21 @@ function DashboardContentInner() {
         clearError,
     } = useDashboardStore()
 
-    // Redirect to homepage if not authenticated (use Clerk for auth status)
+    // Redirect to homepage if not authenticated via backend JWT session.
+    // We use the Zustand authStore (backend JWT cookie) as the source of truth
+    // because GitHub OAuth creates a backend session, NOT a Clerk session.
     useEffect(() => {
-        if (clerkLoaded && !isSignedIn) {
+        if (!authLoading && !authenticated) {
             router.push("/")
         }
-    }, [clerkLoaded, isSignedIn, router])
+    }, [authLoading, authenticated, router])
 
-    // Once Clerk confirms auth, also sync auth store for backward compat
+    // Fetch analytics once the backend session is confirmed
     useEffect(() => {
-        if (clerkLoaded && isSignedIn && clerkUser) {
-            checkSession()
-        }
-    }, [clerkLoaded, isSignedIn, clerkUser, checkSession])
-
-    useEffect(() => {
-        if (isSignedIn) {
+        if (authenticated) {
             fetchAnalytics()
         }
-    }, [isSignedIn, fetchAnalytics])
+    }, [authenticated, fetchAnalytics])
 
     useEffect(() => {
         if (error) {
@@ -120,8 +114,8 @@ function DashboardContentInner() {
         return () => clearInterval(interval)
     }, [fetchAnalytics])
 
-    // Show loading state while Clerk initializes
-    if (!clerkLoaded || (authLoading && !isSignedIn)) {
+    // Show loading state while the backend session is being verified
+    if (authLoading && !authenticated) {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

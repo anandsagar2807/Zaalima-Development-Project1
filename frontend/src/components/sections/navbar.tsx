@@ -4,12 +4,12 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, LayoutDashboard } from "lucide-react"
-import { UserButton, useAuth } from "@clerk/nextjs"
-import { SocialAuthButtons } from "@/components/auth/social-auth-buttons"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { Menu, X, LayoutDashboard, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { usePathname } from "next/navigation"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { usePathname, useRouter } from "next/navigation"
+import { useAuthStore } from "@/store/authStore"
+import { SocialAuthButtons } from "@/components/auth/social-auth-buttons"
 import { ClerkGuard } from "@/components/auth/ClerkGuard"
 
 const navItems = [
@@ -64,15 +64,7 @@ export function Navbar() {
                     <div className="flex items-center gap-3 justify-self-end">
                         <ThemeToggle />
                         <div className="hidden md:flex items-center gap-3">
-                            <ClerkGuard
-                                fallback={
-                                    <Link href="/sign-in">
-                                        <Button variant="default" size="sm">Sign In</Button>
-                                    </Link>
-                                }
-                            >
-                                <ClerkAuthSection />
-                            </ClerkGuard>
+                            <AuthSection />
                         </div>
                         <button
                             className="md:hidden p-2"
@@ -104,15 +96,7 @@ export function Navbar() {
                                 </Link>
                             ))}
                             <div className="flex flex-col gap-2 pt-4 border-t">
-                                <ClerkGuard
-                                    fallback={
-                                        <Link href="/sign-in" onClick={() => setIsOpen(false)}>
-                                            <Button variant="default" className="w-full">Sign In</Button>
-                                        </Link>
-                                    }
-                                >
-                                    <ClerkMobileAuthSection onClose={() => setIsOpen(false)} />
-                                </ClerkGuard>
+                                <MobileAuthSection onClose={() => setIsOpen(false)} />
                             </div>
                         </div>
                     </motion.div>
@@ -122,11 +106,20 @@ export function Navbar() {
     )
 }
 
-/** Desktop auth section — uses Clerk hooks, must be inside ClerkProvider */
-function ClerkAuthSection() {
-    const { isSignedIn } = useAuth()
+/** Desktop auth section — uses backend JWT session (authStore), not Clerk */
+function AuthSection() {
+    const router = useRouter()
+    const { authenticated, user, logout } = useAuthStore()
 
-    if (isSignedIn) {
+    if (authenticated) {
+        const displayName = user?.name || user?.githubUsername || user?.email || "User"
+        const avatarUrl = user?.githubAvatar || user?.avatar
+
+        const handleLogout = async () => {
+            await logout()
+            router.push("/")
+        }
+
         return (
             <>
                 <Link href="/dashboard">
@@ -135,19 +128,54 @@ function ClerkAuthSection() {
                         Dashboard
                     </Button>
                 </Link>
-                <UserButton afterSignOutUrl="/" />
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                    title={`Signed in as ${displayName}`}
+                >
+                    {avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={avatarUrl}
+                            alt={displayName}
+                            className="h-7 w-7 rounded-full object-cover border border-border"
+                        />
+                    ) : (
+                        <User className="h-5 w-5" />
+                    )}
+                    <LogOut className="h-4 w-4" />
+                </button>
             </>
         )
     }
 
-    return <SocialAuthButtons size="sm" />
+    return (
+        <ClerkGuard
+            fallback={
+                <Link href="/sign-in">
+                    <Button variant="default" size="sm">Sign In</Button>
+                </Link>
+            }
+        >
+            <SocialAuthButtons size="sm" />
+        </ClerkGuard>
+    )
 }
 
-/** Mobile auth section — uses Clerk hooks, must be inside ClerkProvider */
-function ClerkMobileAuthSection({ onClose }: { onClose: () => void }) {
-    const { isSignedIn } = useAuth()
+/** Mobile auth section — uses backend JWT session (authStore), not Clerk */
+function MobileAuthSection({ onClose }: { onClose: () => void }) {
+    const router = useRouter()
+    const { authenticated, user, logout } = useAuthStore()
 
-    if (isSignedIn) {
+    if (authenticated) {
+        const displayName = user?.name || user?.githubUsername || user?.email || "User"
+
+        const handleLogout = async () => {
+            onClose()
+            await logout()
+            router.push("/")
+        }
+
         return (
             <>
                 <Link href="/dashboard" onClick={onClose}>
@@ -156,12 +184,27 @@ function ClerkMobileAuthSection({ onClose }: { onClose: () => void }) {
                         Dashboard
                     </Button>
                 </Link>
-                <div className="flex items-center justify-center">
-                    <UserButton afterSignOutUrl="/" />
-                </div>
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-accent transition-colors"
+                >
+                    <User className="h-4 w-4" />
+                    <span className="truncate">{displayName}</span>
+                    <LogOut className="h-4 w-4" />
+                </button>
             </>
         )
     }
 
-    return <SocialAuthButtons fullWidth />
+    return (
+        <ClerkGuard
+            fallback={
+                <Link href="/sign-in" onClick={onClose}>
+                    <Button variant="default" className="w-full">Sign In</Button>
+                </Link>
+            }
+        >
+            <SocialAuthButtons fullWidth />
+        </ClerkGuard>
+    )
 }
